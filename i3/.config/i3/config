@@ -130,6 +130,14 @@ bindsym $mod+Shift+8 move container to workspace $ws8
 bindsym $mod+Shift+9 move container to workspace $ws9
 bindsym $mod+Shift+0 move container to workspace $ws10
 
+# mover contendedor enfocado a siguiente o previo contenedor
+bindsym $mod+Shift+comma move container to workspace prev_on_output
+bindsym $mod+Shift+period move container to workspace next_on_output
+
+# mover ventanas a ciertos workspaces
+for_window [class="Spotify"] move to workspace $ws10
+#assign [class=""] $ws9
+
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -182,9 +190,10 @@ exec_always setxkbmap -option caps:escape
 
 # Atajos para arrancar progrmas
 bindsym $mod+Shift+x exec uxterm -e vifm
-bindsym $mod+x exec pcmanfm
+bindsym $mod+x exec dolphin
 bindsym $mod+b exec firefox
 bindsym $mod+Shift+b exec firefox --private-window
+bindsym $mod+m workspace $ws9, exec google-chrome --profile-directory="Default"
 
 # Change display size on startup 
 exec xrandr -s 1600x900
@@ -209,7 +218,7 @@ bindsym --release XF86MonBrightnessUp exec pkill -SIGRTMIN+13 i3blocks # enviar 
 bindsym XF86MonBrightnessDown exec xbacklight -dec 10 # disminuir brillo 
 bindsym --release XF86MonBrightnessDown exec pkill -SIGRTMIN+13 i3blocks # enviar señal a i3blocks
 
-# Control de multimedi
+# Control de multimedia
 bindsym Ctrl+Shift+slash exec playerctl play-pause
 bindsym Ctrl+Shift+semicolon exec playerctl previous
 bindsym Ctrl+Shift+apostrophe exec playerctl next
@@ -240,4 +249,4 @@ exec xinput set-prop "Elan Touchpad" "libinput Tapping Enabled" 1
 bindsym $mod+Delete exec i3lock
 
 # Cambiar el wallpaper
-exec_always feh --bg-scale ~/Pictures/wallpapers/homeworld_desktop.png
+exec_always feh --bg-scale ~/Pictures/wallpapers/132987.jpg

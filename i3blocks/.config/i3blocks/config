@@ -44,14 +44,14 @@ markup=none
 #interval=once
 #signal=11
 
-# Generic media player support
-#
-# This displays "ARTIST - SONG" if a music is playing.
-# Supported players are: spotify, vlc, audacious, xmms2, mplayer, and others.
-[mediaplayer]
-instance=spotify
-interval=2
-signal=10
+## Generic media player support
+##
+## This displays "ARTIST - SONG" if a music is playing.
+## Supported players are: spotify, vlc, audacious, xmms2, mplayer, and others.
+#[mediaplayer]
+#instance=spotify
+#interval=2
+#signal=10
 
 # Indicador de estado de redshift
 [redshift]
@@ -125,7 +125,7 @@ interval=10
 # see the script for details.
 [cpu_usage]
 label=CPU
-interval=10
+interval=5
 min_width=CPU: 100.00%
 #separator=false
 
