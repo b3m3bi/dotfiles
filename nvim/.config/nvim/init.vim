@@ -18,6 +18,8 @@ Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': 
 "Plug 'nvim-telescope/telescope.nvim'                        " buscador de archivos
 "Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'} " libreria para hacer parsing 
 "Plug 'junegunn/fzf.vim'                                     " buscador de archivos
+Plug 'jpalardy/vim-slime', {'for':'python'}
+Plug 'hanschen/vim-ipython-cell', { 'for': 'python' }
 
 " inicializar el sistema de plugins
 call plug#end()	    		" requerido
@@ -65,3 +67,4 @@ autocmd BufRead,BufNewFile,BufEnter *.md,*.markdown call MathAndLiquid()
 "nnoremap <leader>fb <cmd>Telescope buffers<cr>
 "nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 
+let g:slime_target = "tmux"

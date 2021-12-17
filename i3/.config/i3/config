@@ -68,10 +68,10 @@ bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
 
 # split in horizontal orientation
-bindsym $mod+v split h
+bindsym $mod+c split h
 
 # split in vertical orientation
-bindsym $mod+c split v
+bindsym $mod+x split v
 
 # enter fullscreen mode for the focused container
 bindsym $mod+f fullscreen toggle
@@ -136,7 +136,6 @@ bindsym $mod+Shift+period move container to workspace next_on_output
 
 # mover ventanas a ciertos workspaces
 for_window [class="Spotify"] move to workspace $ws10
-#assign [class=""] $ws9
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
@@ -182,15 +181,23 @@ bar {
         status_command i3blocks 
 }
 
-# Cambiar Caps a Esc
-exec_always setxkbmap -option caps:escape
+# Cambiar Caps a Esc y Caps a Shift+Caps
+exec_always setxkbmap -option caps:escape_shifted_capslock
 
 # Invertir el scrolling
-# Esto lo implementé en /etc/X11/xorg.conf.d/40-libinput.conf 
+# Se agrega Option "NaturalScrolling" "True" en /usr/share/X11/xorg-conf.d/40-libinput.conf https://askubuntu.com/questions/1122513/how-to-add-natural-inverted-mouse-scrolling-in-i3-window-manager
+# Section "InputClass"
+#        Identifier "libinput touchpad catchall"
+#        MatchIsTouchpad "on"
+#        MatchDevicePath "/dev/input/event*"
+#        Driver "libinput"
+#        Option "NaturalScrolling" "True"
+#EndSection
+
 
 # Atajos para arrancar progrmas
-bindsym $mod+Shift+x exec uxterm -e vifm
-bindsym $mod+x exec dolphin
+bindsym $mod+Shift+z exec uxterm -e vifm
+bindsym $mod+z exec uxterm -e mc
 bindsym $mod+b exec firefox
 bindsym $mod+Shift+b exec firefox --private-window
 bindsym $mod+m workspace $ws9, exec google-chrome --profile-directory="Default"
@@ -235,7 +242,7 @@ exec --no-startup-id libinput-gestures-setup start
 
 # Cambiar el display del teclado
 #exec setxkbmap -layout us,ru -variant altgr-intl
-exec setxkbmap -layout us -variant altgr-intl
+exec_always setxkbmap -layout us -variant altgr-intl
 #exec setxkbmap -option 'grp:win_space_toogle'
 
 # Atajo para moverse a siguiente escritorio
@@ -250,3 +257,6 @@ bindsym $mod+Delete exec i3lock
 
 # Cambiar el wallpaper
 exec_always feh --bg-scale ~/Pictures/wallpapers/132987.jpg
+
+# Se ejecuta el "compositor" (esto arregla el "flickering/tearing" al hacer scroll) https://askubuntu.com/questions/751149/screen-tearing-when-using-i3-none-when-using-unity
+#exec --no-startup-id compton --config ~/.config/compton/compton.conf -b

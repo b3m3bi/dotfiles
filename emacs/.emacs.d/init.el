@@ -78,12 +78,23 @@
 		   org-roam-ui-open-on-start t))
 
 
+
+(setq org-babel-load-languages
+      '((python . t)
+	(R . t)))
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ org-babel-load-languages)
+
+(setq org-babel-python-command "python3")
+
 ; se esconden los marcadores de enfasis
 (setq org-hide-emphasis-markers t)
 
 ; se permite cambiar el tamaño de las imágenes en el preview
 (setq org-image-actual-width nil)
 
-;; se quita toolbar y menubar
-;(menu-bar-mode -1)
-;(tool-bar-mode -1)
+; se quita toolbar y menubar
+(menu-bar-mode -1)
+(tool-bar-mode -1)
