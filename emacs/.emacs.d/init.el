@@ -77,10 +77,12 @@
 		   org-roam-ui-update-on-save t
 		   org-roam-ui-open-on-start t))
 
-
+(use-package ob-ipython
+  :straight t)
 
 (setq org-babel-load-languages
       '((python . t)
+	(ipython . t)
 	(R . t)))
 
 (org-babel-do-load-languages
@@ -88,6 +90,9 @@
  org-babel-load-languages)
 
 (setq org-babel-python-command "python3")
+(setq python-shell-interpreter "python3")
+; se activan las imágenes en línea
+(add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
 
 ; se esconden los marcadores de enfasis
 (setq org-hide-emphasis-markers t)
