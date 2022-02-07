@@ -11,13 +11,13 @@ sudo apt -y install kde-plasma-desktop plasma-nm
 - Utilidades generales de línea de comandos
 
 ```
-sudo apt install vim python3-pip
+sudo apt install vim python3-pip stow texlive texlive-latex-extra
 ```
 
 - Utilidades generales de interfaz gráfica
 
 ```
-sudo apt install firefox
+sudo apt install firefox ttf-mscorefonts-installer libreoffice-writer libreoffice-calc libreoffice-kf5
 ```
 ## Instalación de libinput-gestures
 
@@ -47,6 +47,8 @@ cd ~/.config/virtual-desktop-bar/
 sudo sh ./scripts/install-dependencies-ubuntu.sh # instalar dependencias
 sudo sh ./scripts/install-applet.sh
 ```
+
+- [Sticky Window Snapping](https://store.kde.org/p/1112552/) - script de kwin para que las ventanas se pequen al ajustar su tamaño (si no funciona ver solución propuesta en la página).
 
 - [konsave](https://github.com/Prayag2/konsave) - guarda la configuración de kde
 
@@ -86,7 +88,8 @@ sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.
 - Para poder instalar las dependencias de bitwig 3.+  en debian testing se necesita [habilitar la multiarquitectura](https://wiki.debian.org/Multiarch/HOWTO)
 
 ```
-sudo dpkg --add-architecture i368
+sudo dpkg --add-architecture i386
+sudo apt update
 ```
 
 ## Symlinks de archivos de configuración de programas con dotfiles
@@ -106,3 +109,84 @@ stow -nv nombre-paquete <nombre-de-la-carpeta>
 stow -v nombre-paquete <nombre de la carpeta>
 ```
 
+## Emacs
+
+- Instalar la versión 27.2 desde el código fuente. [Referencia](https://www.youtube.com/watch?v=22rPCT10Kkw).
+
+1. Instalar las dependencias necesarias (requiere que se tengan `deb-src` en el sources.list):
+
+```
+sudo apt-get build-dep emacs
+```
+
+2. Obtener src de emacs:
+
+```
+wget https://gnu.mirror.constant.com/emacs/emacs-27.2.tar.gz
+tar -xvf emacs-27.2
+```
+
+3. Construir emacs:
+
+```
+cd emacs-27.2/
+./configure
+make
+sudo make install
+```
+
+### Requerimientos de algunos plugins y modos
+
+- Requerido por **ob-jupyter**.
+
+```
+sudo pip install jupyter_console jupyter_client
+```
+
+- Requerido por 'org-latex-preview'
+
+```
+sudo apt install dvipng
+```
+
+## Latex
+
+- Instalar xelatex
+
+```
+sudo apt install texlive-xetex
+```
+
+- Agregar español a babel
+
+```
+sudo apt-get install texlive-lang-spanish
+``
+
+- Agregar fontawesome
+
+```
+sudo apt install texlive-fonts-extra
+```
+
+##  Webdev
+
+- Instalar nodejs y npm
+
+```
+sudo apt install nodejs npm
+```
+- Instalar angular-cli
+
+```
+sudo npm install -g @angular/cli
+```
+
+- [Instalar mongodb](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)
+
+```
+wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+### revisar si hay repos más recientes a buster en enereo 2022 no hay
+echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/5.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+sudo apt update && sudo apt install mongodb-org
+```
