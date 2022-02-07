@@ -161,7 +161,7 @@ sudo apt install texlive-xetex
 
 ```
 sudo apt-get install texlive-lang-spanish
-``
+```
 
 - Agregar fontawesome
 
