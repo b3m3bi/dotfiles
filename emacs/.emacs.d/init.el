@@ -1,10 +1,16 @@
-;; quitar mensaje del inicio
+;;;;;;;;;; CONFIGURACIÓN GENERAL ;;;;;;;;;;
+
+;; se quita el mensaje de inicio
 (setq inhibit-startup-message t)
 
-;; se mandan las ediciones de customize a otro archivo
+;; se mandan las ediciones de customize a otro archivo y se cargan
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file)
 
+
+;;;;;;;;;; PAQUETES ;;;;;;;;;;
+
+;; 
 ;; se carga e inicializa straight.el (un administrador de paquetes)
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -43,28 +49,39 @@
 	     :config
 	     (org-roam-setup))
 
-(use-package org-ref
-	     :straight t
-	     :config
-	     (setq reftex-default-bibliography '("~/Zettel/bibliography/references.bib"))
-	     (setq org-ref-bibliography-notes "~/Zettel/bibliography/notes.org"
-		   org-ref-default-bibliography '("~/Zettel/bibliography/references.bib")
-		   org-ref-pdf-directory "~/Zettel/bibliography/bibtex-pdfs/"))
+;(use-package citar
+;  :straight t
+;  :config
+;  (setq citar-notes-paths '("~/Prueba/notas.org")))
 
+;; este paquete permite buscar y administrar bibliografías
+;; (e.g., abrirlas en el navegador, insertar la cita)
+;; bibtex usando helm de front-end
+(use-package helm-bibtex
+  :straight t
+  :init
+  ;; archivos de bibliografía en los que va a buscar
+  (setq bibtex-completion-bibliography '("~/Zettel/bibliography/ref-all.bib")
+	;; usar el campo de file para encontrar la ubicación del pdf
+	bibtex-completion-pdf-field "file"
+	;; definir directorio/archivo donde van a guardarse las notas de los artículos
+	bibtex-completion-notes-path "~/Zettel/bibliography/notes.org")
+  ;; definir la aplicación para abrir el pdf
+  (setq bibtex-completion-pdf-open-function
+	(lambda (fpath)
+	  (call-process "okular" nil 0 nil fpath))))
 
-(use-package org-roam-bibtex
-	     :straight t
-	     :after org-roam
-	     :config
-	     (org-roam-bibtex-mode))
+(org-cite-register-processor 'my-bibtex-org-cite-follow
+  :follow (lambda (_ _) (helm-bibtex)))
+(setq org-cite-follow-processor 'my-bibtex-org-cite-follow)
+
 
 (use-package visual-fill-column
 	     :straight t
 	     :init
 	     (add-hook 'org-mode-hook 'visual-line-mode)
 	     (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
-	     ;(setq visual-fill-column-center-text t)
-	     )
+	     (setq visual-fill-column-center-text t))
 
 
 (use-package org-roam-ui
@@ -77,38 +94,37 @@
 		   org-roam-ui-update-on-save t
 		   org-roam-ui-open-on-start t))
 
-(use-package monokai-theme
-  :straight
-  (:host github :repo "oneKelvinSmith/monokai-emacs" :branch "master" :files ("*.el")))
-
+;; tema
 (use-package modus-themes
   :straight
   (:host github :repo "protesilaos/modus-themes" :branch "main" :files ("*.el"))
+  :init
+  (setq modus-themes-org-blocks 'gray-background)
+  (modus-themes-load-themes)
   :config
   (modus-themes-load-operandi)
   :bind ("<f5>" . modus-themes-toggle))
 
-
+;; soporte para usar el kernel de jupyter en org-mode
 (use-package ob-ipython
   :straight t)
 
+;; variables de org-mode
 (setq org-babel-load-languages
       '((python . t)
 	(ipython . t)
 	(R . t)))
 
-(org-babel-do-load-languages
- 'org-babel-load-languages
- org-babel-load-languages)
+(org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
 
-(setq org-babel-python-command "python3")
+;; cambiar python a python3
 (setq python-shell-interpreter "python3")
 
 ;; se activan las imágenes en línea
 (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
 
 ;; se esconden los marcadores de enfasis
-;(setq org-hide-emphasis-markers t)
+;setq org-hide-emphasis-markers t)
 
 ;; se permite cambiar el tamaño de las imágenes en el preview
 (setq org-image-actual-width nil)
@@ -146,12 +162,27 @@
 ;;       ("\\.pdf.xoj" . "xournal %s")))
 ))
 
+;; permite mezclar fuentes variables (proporcionales) y mono (fijas)
+(use-package mixed-pitch
+  :straight t)
 
-;; cambiar fuente en org-mode
-;(defun my-buffer-face-mode-variable ()
-;  "Utilizar una fuente con longitud variable (proporcional)"
-;  (interactive)
-;  (setq buffer-face-mode-face '(:family "Roboto Mono" :weight light :height 120 ))
-;  (buffer-face-mode))
+;; determinar cual es la fuente variable (proporcional)
+(set-face-attribute 'variable-pitch nil :family "Roboto" :height 120 :weight 'light)
 
-; (add-hook 'org-mode-hook 'my-buffer-face-mode-variable)
+;; autocompletado
+(use-package company
+  :straight t)
+
+
+;; Este paquete debe permitir insertar imagenes con drag and drop.
+;; ENTENDER COMO FUNCIONA ESTO!!!!
+;; Insertar imágenes es muy facil, por lo que no creo necesitarlo...
+;(use-package org-download
+;  :straight t
+;  :init
+;  (add-hook 'dired-mode-hook 'org-download-enable))
+
+;; resalta los bloques latex en org
+(setq org-highlight-latex-and-related '(latex))
+(set-face-attribute 'org-latex-and-related nil :foreground "#854b6b")
+
