@@ -185,8 +185,36 @@ sudo npm install -g @angular/cli
 - [Instalar mongodb](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)
 
 ```
-wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+curl https://www.mongodb.org/static/pgp/server-5.0.asc | gpg --dearmor | sudo dd of=/usr/local/share/keyrings/mongodb.gpg 
 ### revisar si hay repos más recientes a buster en enereo 2022 no hay
-echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/5.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+echo "deb [signed-by=/etc/apt/keyrings/mongodb-5.0.gpg arch=amd64] http://repo.mongodb.org/apt/debian buster/mongodb-org/5.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
 sudo apt update && sudo apt install mongodb-org
 ```
+
+
+# R
+
+- Paquetes necesarios para installar ~juicr~:
+
+```
+sudo apt install libfftw3-dev libcurl4-openssl-dev
+```
+
+Luego en R:
+
+```
+install.packages("BiocManager") 
+BiocManager::install("EBImage")
+install.packages("juicr")
+```
+
+# Zotero
+
+Algunos plugins que mejoran su funcionalidad son:
+
+- [Zotfile](http://zotfile.com/): permite adminsitrar los archivos adjuntos (e.g., renombrarlos automáticamente)
+- [Better Bibtex](https://retorque.re/zotero-better-bibtex/): permite administrar los datos de bibliografía (e.g., generar automáticamente las claves de citas, exportar automáticamente el `.bib`)
+
+ 
+
+
