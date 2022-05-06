@@ -130,13 +130,22 @@
 	 ("C-c n i" . org-roam-node-insert)
 	 ("C-c n b" . org-roam-buffer-toggle))
   :config
-  ;; configurar cómo se ve el buffer de info del nodo
+  ;; configurar cómo se despliega el buffer de info del nodo
   (add-to-list 'display-buffer-alist
 	       '("\\*org-roam\\*"
 		 (display-buffer-in-direction)
 		 (direction . right)
 		 (window-width . 0.33)
 		 (window-height . fit-window-to-buffer)))
+  ;; configurar cómo se ve el buffer de info del nodo
+  ;; (add-hook 'org-roam-mode-hook 'org-variable-pitch-minor-mode)
+  ;; (add-hook 'org-roam-mode-hook 'visual-line-mode)
+  ;; (add-hook 'org-roam-mode-hook 'org-link-minor-mode)
+  (setq org-roam-mode-sections
+      (list #'org-roam-backlinks-section
+            #'org-roam-reflinks-section
+            ;; #'org-roam-unlinked-references-section
+            ))
   ;; definir los templates de captura
   (setq org-roam-capture-templates
 	'(("d" "default" plain "%?"
@@ -172,15 +181,15 @@
 	(concat "${type:12} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
   
 ;; interfaz gráfica para navegar org-roam en navegador web
-;; (use-package org-roam-ui
-;;   :straight
-;;   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-;;   :after org-roam
-;;   :config
-;;   (setq org-roam-ui-sync-theme t
-;; 	org-roam-ui-follow t
-;; 	org-roam-ui-update-on-save t
-;; 	org-roam-ui-open-on-start t))
+(use-package org-roam-ui
+  :straight
+  (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  :after org-roam
+  :config
+  (setq org-roam-ui-sync-theme t
+	org-roam-ui-follow t
+	org-roam-ui-update-on-save t
+	org-roam-ui-open-on-start t))
 
 ;; paquete para adminsitrar bibliografías bibtex
 (use-package citar
@@ -269,6 +278,9 @@
   (add-hook 'org-mode-hook 'org-toggle-inline-images)
   ;; se esconden los marcadores de enfasis
   (setq org-hide-emphasis-markers t)
+  ;; formatear subíndices y superíndices en WYSIWYM (what you see is what you mean)
+  (setq org-pretty-entities t
+	org-pretty-entities-include-sub-superscripts t)
   ;; cambiar ancho de columnas
   (setq-default fill-column 75)
   ;; template de slipbox
@@ -336,7 +348,7 @@
   :straight t
   :config
   (pulsar-global-mode 1)
-  (setq pulsar-face 'pulsar-magenta
+  (setq pulsar-face 'pulsar-yellow
 	pulsar-pulse-on-window-change t
 	pulsar-delay 0.05)
   (setq pulsar-pulse-functions
@@ -420,6 +432,20 @@ un template con la información en ENTRY"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; COSAS NUEVAS PARA PROBAR ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(use-package rg
+  :straight t)
+
+;; (use-package org-link-minor-mode
+;;   :straight t)
+
+;; (use-package orglink
+;;   :straight t
+;;   :init
+;;   (setq orglink-activate-in-modes '(org-roam-mode))
+;;   :config
+;;   (global-orglink-mode t))
 
 ;; este puede sustituir a visual-line-mode y fill-column
 ;; (use-package olivetti
