@@ -27,43 +27,19 @@
 ;; resalta la línea en la que se está en un documento
 ;(global-hl-line-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; ADMININISTRACIÓN DE PAQUETES ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; se usa package como administrador de paquetes
+(require 'package)
+;; se agrega el repo de melpa
+;; actualizar lista de paquetes:
+;; M-x package-refresh-contents RET
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
 
-;; straight.el es un administrador de paquetes que permite
-;; installar cualquier paquete de MELPA, ELPA o de un repo
-;; cualquiera (pasándole una RECIPE; ver documentación).
-;; Los paquetes se instalan clonándolos de sus repositorios
-;; de Git (en lugar de descargar tarballs como otros
-;; administradores de paquetes)
-;; Este código de bootstraping inicializa straight.el
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-	"straight/repos/straight.el/bootstrap.el"
-	user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-(setq package-enable-at-startup nil)
-
-;; use-package es una macro que permite agrupar los comandos
-;; de configuraciones de diferentes paquetes para tener
-;; todo más ordenadito (NO es una administrador de paquetes)
-;; se activa la integración de straight con use-package
-;; (con :straight t o :straight RECIPE se le indica
-;; a use-package que use straight como administrador de paquetes)
-(straight-use-package 'use-package)
-
-;; ACTUALIZACIÓN DE PAQUETES CON straight.el:
-;; M-x straight-pull-all
+;; se usa use-package para tener todo mas ordenadito
+;; instalarlo manualmente por primera vez:
+;; M-x package-install RET use-package
+(eval-when-compile
+  (require 'use-package))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; SISTEMA DE COMLETADO ;;;;;;;;;;
@@ -75,7 +51,7 @@
 ;; una alternativa al UI de helm, ivy, selectrum, ido,
 ;; icomplete, etc.)
 (use-package vertico
-  :straight t
+  :ensure t
   :init
   (vertico-mode))
 
@@ -87,7 +63,7 @@
 ;; componentes separados por espacios y que genera coincidencias
 ;; con todos los componentes en cualquier orden
 (use-package orderless
-  :straight t
+  :ensure t
   ;; se indican los estilos a usar, se usa basic de fallback
   :custom
   (completion-styles '(orderless basic)))
@@ -95,7 +71,7 @@
 ;; marginalia agrega anotaciones al minibuffer sobre
 ;; shortcuts y descripciones
 (use-package marginalia
-  :straight t
+  :ensure t
   :init
   (marginalia-mode))
 
@@ -103,13 +79,13 @@
 ;; contextuales (i.e., que dependen del"target" donde estamos,
 ;; por ejemplo, la selección acual)
 (use-package embark
-  :straight t
+  :ensure t
   :bind
   (("C-." . embark-act)
    ("M-." . embark-dwim)
    ("C-h b" . embark-bindings)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 ;;;;;;;;;; PAQUETES UTILIDADES ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -121,7 +97,7 @@
 
 ;; implementa ideas del método zettelkasten para tomar notas
 (use-package org-roam
-  :straight t
+  :ensure t
   :init
   (setq org-roam-v2-ack t)
   (setq org-roam-directory "~/Zettel")
@@ -139,13 +115,7 @@
 		 (window-height . fit-window-to-buffer)))
   ;; configurar cómo se ve el buffer de info del nodo
   ;; (add-hook 'org-roam-mode-hook 'org-variable-pitch-minor-mode)
-  ;; (add-hook 'org-roam-mode-hook 'visual-line-mode)
-  ;; (add-hook 'org-roam-mode-hook 'org-link-minor-mode)
-  (setq org-roam-mode-sections
-      (list #'org-roam-backlinks-section
-            #'org-roam-reflinks-section
-            ;; #'org-roam-unlinked-references-section
-            ))
+  (add-hook 'org-roam-mode-hook 'variable-pitch-mode)
   ;; definir los templates de captura
   (setq org-roam-capture-templates
 	'(("d" "default" plain "%?"
@@ -182,22 +152,16 @@
   
 ;; interfaz gráfica para navegar org-roam en navegador web
 (use-package org-roam-ui
-  :straight
-  (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-  :after org-roam
-  :config
-  (setq org-roam-ui-sync-theme t
-	org-roam-ui-follow t
-	org-roam-ui-update-on-save t
-	org-roam-ui-open-on-start t))
+  :ensure t
+  ;(:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  :after org-roam)
 
 ;; paquete para adminsitrar bibliografías bibtex
 (use-package citar
-  :straight t
+  :ensure t
   :custom
   ;; archivos con la bibliografia
-  (org-cite-global-bibliography '("~/Zettel/ref-all.bib"))
-  (citar-bibliography org-cite-global-bibliography)
+  (citar-bibliography '("~/Zettel/ref-all.bib"))
   ;; usar citar como procesador de org-cite
   (org-cite-insert-processor 'citar)
   (org-cite-follow-processor 'citar)
@@ -217,7 +181,7 @@
 
 ;; permite abrir archivos con aplicación externa indicada
 (use-package openwith
-  :straight t
+  :ensure t
   :config
   (openwith-mode t)
   (setq openwith-associations
@@ -232,10 +196,15 @@
 
 ;; renderizar citas y bibliografias en CSL
 (use-package citeproc
-  :straight t
+  :ensure t
   :config
   (setq org-cite-csl-locales-dir "~/.emacs.d/straight/repos/org/etc/csl")
   (setq org-cite-csl-styles-dir "~/Zotero/styles"))
+
+;; implementación de repgrip en emacs que permite buscar
+;; recursivamente en el contenido de archivos
+(use-package rg
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; CONFIGURACIÓN DE ORG-MODE ;;;;;;;;;;
@@ -247,21 +216,15 @@
   ;; se activan lenguajes para babel
   (org-babel-do-load-languages 'org-babel-load-languages
 			       '((python  . t)
+				 (dot . t)
 				 ;(ipython . t)
 				 ))
   ;; mostrar las imágenes después de ejecutar un bloque de código
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-  ;; activar wrapping en palabras (este a su vez
-  ;; llama a visual-fill-column, ver arriba)
-  (add-hook 'org-mode-hook 'visual-line-mode)
-  ;; (add-hook 'org-mode-hook 'olivetti-mode)
-  ;; mezclar fuentes
-  (add-hook  'after-init-hook #'org-variable-pitch-setup)
-  ;;(add-hook 'org-mode-hook 'mixed-pitch-mode)
   ;; iniciar con modo de identación virtual
   (setq org-startup-indented t)
   ;; iniciar con secciones sin desplegar
-  (setq org-startup-folded t)
+  (setq org-startup-folded 'content)
   ;; permitir cambiar el tamaño de las imágenes en el preview
   ;; usando una clave (e.g., #+ATTR_ORG: :width 300px)
   (setq org-image-actual-width nil)
@@ -283,17 +246,24 @@
 	org-pretty-entities-include-sub-superscripts t)
   ;; cambiar ancho de columnas
   (setq-default fill-column 75)
+  ;; definir archivo de bibliografía global
+  (setq org-cite-global-bibliography '("~/Zettel/ref-all.bib"))
+  ;; definir directorio de org y archivos de notas
+  (setq org-directory "~/org")
+  (setq org-default-notes-file (concat org-directory "notes.org"))
+  (setq org-refile-targets '(("~/org/gdt.org" :maxlevel . 3)))
   ;; template de slipbox
   (setq org-capture-templates
-	'(("s" "Slipbox" entry (file "~/Zettel/inbox.org") "* %?\n"))))
+	'(("s" "Slipbox" entry (file "~/Zettel/inbox.org") "* %?\n")
+	  ("t" "Todo entry" entry (file "~/org/inbox.org") "* TODO %?"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; TEMAS Y APARIENCIA ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package modus-themes
-  :straight
-  (:host github :repo "protesilaos/modus-themes" :branch "main" :files ("*.el"))
+  :ensure t
+  ;(:host github :repo "protesilaos/modus-themes" :branch "main" :files ("*.el"))
   :init
   (setq modus-themes-org-blocks 'gray-background)
   (modus-themes-load-themes)
@@ -302,17 +272,9 @@
   ;(setq modus-themes-mixed-fonts t)
   :bind ("<f5>" . modus-themes-toggle))
 
-;; emula el efecto de auto-fill-column (que divide automáticamente los
-;; párrafos de acuerdo al valor de fill-column)
-(use-package visual-fill-column
-  :straight t
-  :init
-  (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
-  (setq visual-fill-column-center-text t))
-
 ;; permite mezclar fuentes variables (proporcionales) y mono (fijas)
 (use-package mixed-pitch
-  :straight t
+  :ensure t
   :config
   ;; no cambiar el cursor-style
   (setq mixed-pitch-variable-pitch-cursor nil)
@@ -323,10 +285,17 @@
 ;; (solo que solo funciona en orgmode a diferencia del
 ;; otro que funciona también en latex, markdown, info, etc)
 (use-package org-variable-pitch
-  :straight t
-  (:host github :repo "cadadr/elisp"))
-;;  :config
-;;  (setq org-variable-pitch-fixed-face )
+  :ensure t
+  :config
+  (add-hook 'after-init-hook #'org-variable-pitch-setup))
+
+;; modo para centrar el texto y hacer wrapping 
+;; (este puede sustituir a visual-fill-column)
+(use-package olivetti
+  :ensure t
+  :config
+  (setq olivetti-body-width 85)
+  (add-hook 'org-mode-hook 'olivetti-mode))
 
 ;; definir fuente global por defecto
 (set-face-attribute 'default nil :family "Hack" :height 112)
@@ -345,7 +314,7 @@
 ;; Resalta momentaneamente la línea donde esta el point
 ;; después ejecutar las funciones en `pulsar-pulse-functions'
 (use-package pulsar
-  :straight t
+  :ensure t
   :config
   (pulsar-global-mode 1)
   (setq pulsar-face 'pulsar-yellow
@@ -397,6 +366,20 @@
   (find-file user-init-file))
 (global-set-key (kbd "<XF86Favorites>") 'b3m3bi/open-init-file)
 
+;; Abrir gtd file
+(defun b3m3bi/open-gtd-file ()
+  "Open gtd file."
+  (interactive)
+  (find-file "~/org/gtd.org"))
+(global-set-key (kbd "C-<XF86Favorites>") 'b3m3bi/open-gtd-file)
+
+;; Abrir inbox file
+(defun b3m3bi/open-inbox-file ()
+  "Open gtd file."
+  (interactive)
+  (find-file "~/org/inbox.org"))
+(global-set-key (kbd "M-<XF86Favorites>") 'b3m3bi/open-inbox-file)
+
 ;; Abrir o agregar notas literarias. Usa org-roam de backend
 ;; y depende de citar. Remplaza la función `citar-open-note-function'.
 (defun b3m3bi/org-roam-edit-cite-node (key entry)
@@ -433,40 +416,20 @@ un template con la información en ENTRY"
 ;;;;;;;;;; COSAS NUEVAS PARA PROBAR ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-(use-package rg
-  :straight t)
-
-;; (use-package org-link-minor-mode
-;;   :straight t)
-
-;; (use-package orglink
-;;   :straight t
-;;   :init
-;;   (setq orglink-activate-in-modes '(org-roam-mode))
-;;   :config
-;;   (global-orglink-mode t))
-
-;; este puede sustituir a visual-line-mode y fill-column
-;; (use-package olivetti
-;;   :straight t
-;;   :config
-;;   (setq olivetti-body-width 70))
-
 ;; ;; soporte para usar el kernel de jupyter en org-mode
 ;; ;; este paquete depende de cl y saca la notificación
 ;; ;; en el inicio, además se ve que no es mantenido.
 ;; ;; Explorar otras alternativas e.g., EIN
 ;; (use-package ob-ipython
-;;   :straight t)
+;;   :ensure t)
 
 ;; autocompletado (no suar con corfu)
 ;;(use-package company
-;;  :straight t)
+;;  :ensure t)
 
 ;; ;; autocompletado para python (no usar con company)
 ;; (use-package jedi
-;;   :straight t
+;;   :ensure t
 ;;   :config
 ;;   (add-hook 'python-mode-hook 'jedi:setup))
 
@@ -481,7 +444,7 @@ un template con la información en ENTRY"
 
 ;; ;; saca las ventanitas con la documentación al estilo de vscode
 ;; (use-package corfu-doc
-;;   :straight
+;;   :ensure
 ;;   (:host github :repo "galeo/corfu-doc" :branch "main" :files ("*.el"))
 ;;   :config
 ;;   (add-hook 'corfu-mode-hook #'corfu-doc-mode))
@@ -492,3 +455,11 @@ un template con la información en ENTRY"
 ;; independiente desde fuera de emacs
 ;; (use-package eglot
 ;;   :ensure t)
+
+;; emula el efecto de auto-fill-column (que divide automáticamente los
+;; párrafos de acuerdo al valor de fill-column)
+;; (use-package visual-fill-column
+;;   :ensure t
+;;   :init
+;;   (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
+;;   (setq visual-fill-column-center-text t))

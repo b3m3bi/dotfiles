@@ -111,7 +111,7 @@ stow -v nombre-paquete <nombre de la carpeta>
 
 ## Emacs
 
-- Instalar la versión 27.2 desde el código fuente. [Referencia](https://www.youtube.com/watch?v=22rPCT10Kkw).
+- Instalar la versión 28.1 desde el código fuente. [Referencia](https://www.youtube.com/watch?v=22rPCT10Kkw).
 
 1. Instalar las dependencias necesarias (requiere que se tengan `deb-src` en el sources.list):
 
@@ -122,16 +122,20 @@ sudo apt-get build-dep emacs
 2. Obtener src de emacs:
 
 ```
-wget https://gnu.mirror.constant.com/emacs/emacs-27.2.tar.gz
-tar -xvf emacs-27.2
+#wget https://gnu.mirror.constant.com/emacs/emacs-27.2.tar.gz
+wget https://mirrors.kernel.org/gnu/emacs/emacs-28.1.tar.gz
+tar -xvf emacs-28.1.tar.gz
 ```
 
 3. Construir emacs:
 
 ```
-cd emacs-27.2/
+cd emacs-28.1/
 ./configure
 make
+# revisar si funciona
+src/emacs -Q
+# instalar en sistema
 sudo make install
 ```
 
