@@ -24,9 +24,6 @@
 ;; regresar a config previa con C-{flechas}
 (winner-mode 1)
 
-;; resalta la línea en la que se está en un documento
-;(global-hl-line-mode)
-
 ;; se usa package como administrador de paquetes
 (require 'package)
 ;; se agrega el repo de melpa
@@ -66,7 +63,9 @@
   :ensure t
   ;; se indican los estilos a usar, se usa basic de fallback
   :custom
-  (completion-styles '(orderless basic)))
+  (completion-styles '(orderless basic))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((eglot (styles orderless)))))
 
 ;; marginalia agrega anotaciones al minibuffer sobre
 ;; shortcuts y descripciones
@@ -75,15 +74,18 @@
   :init
   (marginalia-mode))
 
-;; embark implementa la utilidad de acceder a menus
-;; contextuales (i.e., que dependen del"target" donde estamos,
-;; por ejemplo, la selección acual)
-(use-package embark
-  :ensure t
-  :bind
-  (("C-." . embark-act)
-   ("M-." . embark-dwim)
-   ("C-h b" . embark-bindings)))
+;; ;; embark implementa la utilidad de acceder a menus
+;; ;; contextuales (i.e., que dependen del"target" donde estamos,
+;; ;; por ejemplo, la selección acual). Es como llamar un prefijo
+;; ;; de un atajo pero automáticamente.
+;; (use-package embark
+;;   :ensure t
+;;   :bind
+;;   (("C-." . embark-act)
+;;    ("M-." . embark-dwim)
+;;    ("C-h b" . embark-bindings)))
+
+(require 'embark)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 ;;;;;;;;;; PAQUETES UTILIDADES ;;;;;;;;;;
@@ -100,10 +102,11 @@
   :ensure t
   :init
   (setq org-roam-v2-ack t)
-  (setq org-roam-directory "~/Zettel")
+  (setq org-roam-directory "~/org/Zettel")
   (org-roam-db-autosync-mode)
   :bind (("C-c n f" . org-roam-node-find)
 	 ("C-c n i" . org-roam-node-insert)
+	 ("C-c n c" . org-roam-capture)
 	 ("C-c n b" . org-roam-buffer-toggle))
   :config
   ;; configurar cómo se despliega el buffer de info del nodo
@@ -117,21 +120,29 @@
   ;; (add-hook 'org-roam-mode-hook 'org-variable-pitch-minor-mode)
   (add-hook 'org-roam-mode-hook 'variable-pitch-mode)
   ;; definir los templates de captura
+  ;; (key description type template_of_capture(e.g.,lista,heading) template_file)
   (setq org-roam-capture-templates
 	'(("d" "default" plain "%?"
 	   :if-new (file+head "main/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}\n")
-	   :unnarrowed t)
+			      "#+title: ${title}")
+	   :unnarrowed t
+	   :empty-lines-before 1)
 	  ("r" "reference" plain "%?"
 	   :if-new (file+head "reference/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}\n")
-	   :unnarrowed t)
-	  ("a" "article" plain "%?"
+			      "#+title: ${title}")
+	   :unnarrowed t
+	   :empty-lines-before 1)
+	  ("a" "article" plain "\n%?"
 	   :if-new (file+head "articles/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}\n")
+			      "#+title: ${title}")
 	   :unnarrowed t)
-	  ("s" "slipbox" entry "* TODO ${title} \n%?"
-	   :target (node "slipbox")
+	  ("p" "project" plain "\n%?"
+	   :if-new (file+head "projects/%<%Y%m%d%H%M%S>-${slug}.org"
+			      "#+title: ${title}")
+	   :unnarrowed t
+	   :empty-lines-before 1)
+	  ("i" "inbox Zettel" entry "* TODO ${title} \n%?"
+	   :target (node "inbox Zettel")
 	   :unnarrowed t)
 	  ))
   
@@ -150,61 +161,57 @@
   (setq org-roam-node-display-template
 	(concat "${type:12} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
   
-;; interfaz gráfica para navegar org-roam en navegador web
-(use-package org-roam-ui
-  :ensure t
-  ;(:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
-  :after org-roam)
+;; ;; paquete para adminsitrar bibliografías bibtex
+;; (use-package citar
+;;   :ensure t
+;;   :custom
+;;   ;; archivos con la bibliografia
+;;   (citar-bibliography (list (concat org-roam-directory "/ref-all.bib")))
+;;   ;; usar citar como procesador de org-cite
+;;   (org-cite-insert-processor 'citar)
+;;   (org-cite-follow-processor 'citar)
+;;   (org-cite-activate-processor 'citar)
+;;   :config
+;;   ;; refrescar la cache cuando hay cambios en el archivo bib
+;;   (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
+;;   (setq
+;;    ;; abrir embark al ejecutar `org-open-at-point (C-c C-o)
+;;    citar-at-point-function 'embark-act
+;;    ;; directorio de notas
+;;    citar-notes-paths (list (concat org-roam-directory "/reference"))
+;;    ;; para mayor consistencia con org-roam y control del
+;;    ;; template se utiliza una función personalizda
+;;    citar-open-note-functions '(b3m3bi/org-roam-edit-cite-node)))
 
-;; paquete para adminsitrar bibliografías bibtex
-(use-package citar
-  :ensure t
-  :custom
-  ;; archivos con la bibliografia
-  (citar-bibliography '("~/Zettel/ref-all.bib"))
-  ;; usar citar como procesador de org-cite
-  (org-cite-insert-processor 'citar)
-  (org-cite-follow-processor 'citar)
-  (org-cite-activate-processor 'citar)
-  :config
-  ;; refrescar la cache cuando hay cambios en el archivo bib
-  (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
-  (setq
-   ;; abrir embark en el punto en lugar de la acción predetermiada
-   citar-at-point-function 'embark-act
-   ;; directorio de notas (se delega esto a una función personalizada
-   ;; ver abajo)
-   citar-notes-paths '("~/Zettel/reference")
-   ;; para mayor consistencia con org-roam y control del
-   ;; template se utiliza una función personalizda
-   citar-open-note-function 'b3m3bi/org-roam-edit-cite-node))
+;; usar embark para ejecutar acciones contextuales en el punto
+;; (use-package citar-embark
+;;   :after citar embark
+;;   :no-require
+;;   :config (citar-embark-mode))
 
 ;; permite abrir archivos con aplicación externa indicada
-(use-package openwith
-  :ensure t
-  :config
-  (openwith-mode t)
-  (setq openwith-associations
-	'(("\\.pdf\\'" "okular" (file)))))
+;; (use-package openwith
+;;   :ensure t
+;;   :config
+;;   (openwith-mode t)
+;;   (setq openwith-associations
+;; 	'(("\\.pdf\\'" "okular" (file)))))
 
-;; guara la historia del minibuffer en el archivo
+;; guarda la historia del minibuffer en el archivo
 ;; ~/.emacs.d/history y la utiliza en la siguiente
 ;; sesión
 (use-package savehist
   :init
   (savehist-mode))
 
-;; renderizar citas y bibliografias en CSL
+;; renderizar citas y bibliografias usano CSL
 (use-package citeproc
   :ensure t
   :config
   (setq org-cite-csl-locales-dir "~/.emacs.d/straight/repos/org/etc/csl")
+  ;; directorio de estilos csl (se pueden descargar con
+  ;; la interfáz gráfica de Zotero)
   (setq org-cite-csl-styles-dir "~/Zotero/styles"))
-
-;; implementación de repgrip en emacs que permite buscar
-;; recursivamente en el contenido de archivos
-(use-package rg
-  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; CONFIGURACIÓN DE ORG-MODE ;;;;;;;;;;
@@ -240,37 +247,67 @@
   ;; mostrar imágenes al abrir un archivo org
   (add-hook 'org-mode-hook 'org-toggle-inline-images)
   ;; se esconden los marcadores de enfasis
-  (setq org-hide-emphasis-markers t)
+  (setq org-hide-emphasis-markers nil)
   ;; formatear subíndices y superíndices en WYSIWYM (what you see is what you mean)
   (setq org-pretty-entities t
-	org-pretty-entities-include-sub-superscripts t)
+	org-pretty-entities-include-sub-superscripts nil)
+  ;; incluir listas a ciclo de colapso de entradas
+  (setq org-cycle-include-plain-lists 'integrate)
   ;; cambiar ancho de columnas
   (setq-default fill-column 75)
+  ;; archivos disponbiles para construir agenda
+  (setq org-agenda-files '("GTD/gtd.org"))
   ;; definir archivo de bibliografía global
-  (setq org-cite-global-bibliography '("~/Zettel/ref-all.bib"))
+  (setq org-cite-global-bibliography (list (concat org-roam-directory "/ref-all.bib")))
   ;; definir directorio de org y archivos de notas
   (setq org-directory "~/org")
-  (setq org-default-notes-file (concat org-directory "notes.org"))
-  (setq org-refile-targets '(("~/org/gdt.org" :maxlevel . 3)))
-  ;; template de slipbox
+  (setq org-default-notes-file (concat org-directory "/notes.org"))
+  ;; archivos disponibles para hacer refiles
+  (setq org-refile-targets (list
+			    (cons (concat org-directory "/GTD/gtd.org")
+				  (cons :maxlevel 3))
+			    (cons (concat org-directory "/GTD/someday.org")
+				  (cons :maxlevel 3))))
+  (setq org-refile-use-outline-path 'file
+	org-outline-path-complete-in-steps nil)
+  ;; templates
   (setq org-capture-templates
-	'(("s" "Slipbox" entry (file "~/Zettel/inbox.org") "* %?\n")
-	  ("t" "Todo entry" entry (file "~/org/inbox.org") "* TODO %?"))))
+	'(("g" "GTD inbox" entry (file "GTD/inbox.org") "* TODO %?")
+	  ("z" "Zettel inbox" entry (file "Zettel/inbox.org") "* TODO %?"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; TEMAS Y APARIENCIA ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package modus-themes
-  :ensure t
-  ;(:host github :repo "protesilaos/modus-themes" :branch "main" :files ("*.el"))
-  :init
-  (setq modus-themes-org-blocks 'gray-background)
-  (modus-themes-load-themes)
-  :config
-  (modus-themes-load-operandi)
-  ;(setq modus-themes-mixed-fonts t)
-  :bind ("<f5>" . modus-themes-toggle))
+;;(use-package modus-themes
+;;  :ensure nil ;; para usar el paquete construido por default en emacs 28.1
+;;  :init
+;;  (setq modus-themes-org-blocks 'gray-background)
+;;  (modus-themes-load-themes)
+;;  :config
+;;  (modus-themes-load-operandi)
+;;  ;(setq modus-themes-mixed-fonts t)
+;;  :bind ("<f5>" . modus-themes-toggle))
+
+;; se configura el tema y luego se carga
+;; poner en negritas e itálicas algunos elementos como
+;; nombres de funciones y comentarios
+(setq modus-themes-bold-constructs t)
+(setq modus-themes-italic-constructs t)
+(setq modus-themes-mode-line '(borderless))
+(setq modus-themes-completions 'moderate)
+(setq modus-themes-hl-line '(accented))
+(setq modus-themes-subtle-line-numbers t)
+(setq modus-themes-paren-match '(bold))
+(setq modus-themes-region '(bg-only accented))
+(setq modus-themes-org-blocks 'gray-background)
+(setq modus-themes-org-agenda
+      '((header-block . (scale-title))
+	(header-date . (bold-today grayscale))
+	(event . (italic))))
+(load-theme 'modus-operandi)
+(define-key global-map (kbd "<f5>") #'modus-themes-toggle)
+
 
 ;; permite mezclar fuentes variables (proporcionales) y mono (fijas)
 (use-package mixed-pitch
@@ -294,22 +331,20 @@
 (use-package olivetti
   :ensure t
   :config
-  (setq olivetti-body-width 85)
+  (setq olivetti-body-width 90)
   (add-hook 'org-mode-hook 'olivetti-mode))
 
 ;; definir fuente global por defecto
 (set-face-attribute 'default nil :family "Hack" :height 112)
 
 ;; definir valores de la fuente variable (proporcional)
-;;(set-face-attribute 'variable-pitch nil :family "Arial" :height 1.1)
-(set-face-attribute 'variable-pitch nil :family "Arial" :height 1.1)
+(set-face-attribute 'variable-pitch nil :family "Liberation Sans" :height 1.1 :weight 'normal)
 
 ;; definir valores de la fuente fija (mono)
 (set-face-attribute 'fixed-pitch nil :family "Hack" :height 1.0)
-;;(set-face-attribute 'fixed-pitch nil :family "DejaVu Sans Mono" :height 110)
 
 ;; definir fuente que usa org-variable-pitch
-(set-face-attribute 'org-variable-pitch-fixed-face nil :family "Hack" :height 0.9)
+(set-face-attribute 'org-variable-pitch-fixed-face nil :family "Hack" :height 1.0)
 
 ;; Resalta momentaneamente la línea donde esta el point
 ;; después ejecutar las funciones en `pulsar-pulse-functions'
@@ -370,18 +405,19 @@
 (defun b3m3bi/open-gtd-file ()
   "Open gtd file."
   (interactive)
-  (find-file "~/org/gtd.org"))
+  (find-file (concat org-directory "/GTD/gtd.org")))
 (global-set-key (kbd "C-<XF86Favorites>") 'b3m3bi/open-gtd-file)
 
 ;; Abrir inbox file
 (defun b3m3bi/open-inbox-file ()
   "Open gtd file."
   (interactive)
-  (find-file "~/org/inbox.org"))
+  (find-file (concat org-directory "/GTD/inbox.org")))
 (global-set-key (kbd "M-<XF86Favorites>") 'b3m3bi/open-inbox-file)
 
 ;; Abrir o agregar notas literarias. Usa org-roam de backend
 ;; y depende de citar. Remplaza la función `citar-open-note-function'.
+;; basado en https://jethrokuan.github.io/org-roam-guide/
 (defun b3m3bi/org-roam-edit-cite-node (key entry)
   "Si la nota de KEY existe la abre con `find-file' y si
 no existe crea un nodo de tipo reference usando `org-roam-capture-' llenando
@@ -390,8 +426,8 @@ un template con la información en ENTRY"
   ;; el archivo (que ningún elemento de VARLIST sea nil)
     (if-let
 	((file (citar-file--get-note-filename key
-						   citar-notes-paths
-						   citar-file-note-extensions))
+					      citar-notes-paths
+					      citar-file-note-extensions))
 	 (file-exists (file-exists-p file)))
 	;; si se obtuvo el nombre del archivo y si existe se abre
 	(find-file file)
@@ -401,16 +437,31 @@ un template con la información en ENTRY"
 	  ((title (citar--format-entry-no-widths entry "Notes on ${author editor}, ${title}")))
 	;; se crea nodo
 	(org-roam-capture-
-       :info (list :citekey key)
-       :node (org-roam-node-create :title title)
-       :props '(:finalize find-file)
        :templates '(("r" "reference" plain "%?"
 		     :if-new (file+head "reference/${citekey}.org"
 					":PROPERTIES:
 :ROAM_REFS: @${citekey}
 :END:
-#+title: ${title} \n")
-		   :unnarrowed t))))))
+#+title: ${title}")
+		     :unnarrowed t
+		     :empty-lines-before 1))
+       :info (list :citekey key)
+       :node (org-roam-node-create :title title)
+       :props '(:finalize find-file)))))
+
+(defun last-saturday-of-month (date)
+  "Return `t` if DATE is the last saturday of the month."
+(let*
+    ((day (calendar-extract-day date))
+     (month (calendar-extract-month date))
+     (year (calendar-extract-year date))
+     (last-day-month (calendar-last-day-of-month month year))
+     (num-next-day-of-week (+ day 7)))
+  (and
+   ;; true if is saturday
+   (eq (calendar-day-of-week date) 6)
+   ;; true if next
+   (> num-next-day-of-week last-day-month))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; COSAS NUEVAS PARA PROBAR ;;;;;;;;;;
@@ -423,43 +474,182 @@ un template con la información en ENTRY"
 ;; (use-package ob-ipython
 ;;   :ensure t)
 
-;; autocompletado (no suar con corfu)
-;;(use-package company
-;;  :ensure t)
-
-;; ;; autocompletado para python (no usar con company)
-;; (use-package jedi
-;;   :ensure t
-;;   :config
-;;   (add-hook 'python-mode-hook 'jedi:setup))
-
-;; corfu es un front-end para autocompletado (da
-;; la interfaz y funciones útiles para autocompletado)
-;; (use-package corfu
-;;   :ensure t
-;;   :custom
-;;   (corfu-auto t)
-;;   :init
-;;   (corfu-global-mode))
-
-;; ;; saca las ventanitas con la documentación al estilo de vscode
+;; saca las ventanitas con la documentación al estilo de vscode
 ;; (use-package corfu-doc
-;;   :ensure
-;;   (:host github :repo "galeo/corfu-doc" :branch "main" :files ("*.el"))
+;;   :ensure t
 ;;   :config
-;;   (add-hook 'corfu-mode-hook #'corfu-doc-mode))
+;;   (add-hook 'corfu-mode-hook #'corfu-doc-mode)
+;;   (define-key corfu-map (kbd "M-p") #'corfu-doc-scroll-down)
+;;   (define-key corfu-map (kbd "M-n") #'corfu-doc-scroll-up)
+;;   (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle))
 
-;; eglot es un cliente de lsp (language service protocol)
-;; para dar funcionalidad de autocompletado y otros.
-;; Cada lsp se debe instalar y se puede configurar de forma
-;; independiente desde fuera de emacs
-;; (use-package eglot
+;; interfaz gráfica para navegar org-roam en navegador web
+;; (use-package org-roam-ui
 ;;   :ensure t)
 
-;; emula el efecto de auto-fill-column (que divide automáticamente los
-;; párrafos de acuerdo al valor de fill-column)
-;; (use-package visual-fill-column
+;; resalta la línea en la que se está en un documento
+;(global-hl-line-mode)
+
+;; interfáz para buscar notas se actualiza directamente
+;; (pero es medio lento)
+;; (use-package deft
+;;   :ensure nil
+;;   :after org
+;;   :bind ("C-c n d" . deft)
+;;   :custom
+;;   (deft-default-extension "org")
+;;   (deft-directory (concat org-roam-directory "/main"))
+;;   (deft-recursive nil)
+;;   (deft-use-filter-string-for-filename))
+
+;; implementación de repgrip en emacs que permi;; te buscar
+;; ;; recursivamente en el contenido de archivos
+;; (use-package rg
 ;;   :ensure t
+;;   :bind ("C-c n l" . b3m3bi/rg-lt-search-zettel)
+;;   :config
+;;   (rg-define-search b3m3bi/rg-lt-search-zettel
+;;     "Search in zettel files regex"
+;;     :query ask
+;;     :format literal
+;;     :files "org"
+;;     :dir org-roam-directory
+;;     :menu ("Custom" "z" "zettel")))
+
+;; según entiendo este paquete hace muchas acciones con el sistema
+;; complete-read. Por ejemplo, permite hacer búsquedas desde el
+;; sistema de completado y ejecutar a la vez en vivo otras funciones
+(use-package consult
+  :ensure t
+  :bind ("C-c n r" . b3m3bi/org-roam-consult-rg))
+
+(defun b3m3bi/org-roam-consult-rg ()
+  "Consult ripgrep on org-roam-directory."
+  (interactive)
+  (consult-ripgrep org-roam-directory))
+
+;; corfu es un front-end para autocompletado en el buffer
+;; (da la interfaz y funciones útiles para autocompletado)
+;; funciona usando dabbrevs (C-/) y capfs. Y también puede
+;; usar lo que se recibe del servidor LSP
+(use-package corfu
+  :ensure t
+  :init
+  :config
+  (setq corfu-auto t)
+  :hook
+  ((python-mode . corfu-mode)
+   (lisp-mode . corfu-mode)))
+
+;; ;; https://github.com/minad/corfu/wiki
+;; (use-package lsp-mode
+;;   :custom
+;;   (lsp-completion-provider :none)
 ;;   :init
-;;   (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
-;;   (setq visual-fill-column-center-text t))
+;;   (defun my/lsp-mode-setup-completion ()
+;;     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+;;           '(orderless))) 
+;;   :hook
+;;   (lsp-completion-mode . my/lsp-mode-setup-completion)
+;;   (python-mode . lsp-completion-mode-hook)
+;;   :commands lsp)
+
+;; cliente lsp configurado para funcionar con corfu
+;; (use-package lsp-mode
+;;   :custom
+;;   (lsp-completion-provider :none)
+;;   :init
+;;   (defun my/lsp-mode-setup-completion ()
+;;     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+;;           '(orderless)))
+;;   :config
+;;   ;; configuraciones para mejorar el desempeño (revisar con M-x lsp-doctor)
+;;   ;; ver https://emacs-lsp.github.io/lsp-mode/page/performance/
+;;   (setq gc-cons-threshold 1600000
+;; 	read-process-output-max (* 1024 1024))
+;;   :hook
+;;   (lsp-completion-mode . my/lsp-mode-setup-completion)
+;;   (python-mode . lsp)
+;;   :commands lsp)
+
+(use-package eglot
+  :ensure t
+  :config 
+  (add-hook 'python-mode-hook 'eglot-ensure))
+
+(add-to-list 'load-path "~/.emacs.d/manual-packages/org-krita")
+
+(use-package org-krita
+  :ensure nil
+  :config
+  (add-hook 'org-mode-hook 'org-krita-mode))
+
+;; (use-package display-line-numbers
+;;   :ensure nil
+;;   :hook
+;;   (emacs-lisp-mode . display-line-numbers-mode)
+;;   (python-mode . display-line-numbers-mode))
+
+(use-package code-cells
+  :ensure nil
+  :bind
+  (("C-c C-w" . code-cells-eval)
+   ("M-p" . code-cells-backward-cell)
+   ("M-n" . code-cells-forward-cell)
+   ("M-N" . code-cells-move-cell-down)
+   ("M-P" . code-cells-move-cell-up)))
+
+;; probar para ver si sustituye a org-roam
+;; una ventaja muy buena es que no descuida el nombre del archivo
+;; lo que lo hace más portable (fuera de eso creo que necesita más configuración
+;; que org-roam)
+(use-package denote
+  :ensure nil
+  :config
+  (setq denote-directory "~/Pruebas/notas/")
+  (setq denote-known-keywords
+	'("main" "reference" "project" "article" "computación" "ciencia" "matemáticas"))
+  (setq denote-infer-keywords t)
+  (setq denote-sort-keywords t)
+  (setq denote-file-type nil)
+  (setq denote-allow-multi-word-keywords nil)
+  (add-hook 'dired-mode-hook #'denote-dired-mode)
+
+ (with-eval-after-load 'org-capture
+       (require 'denote-org-capture)
+       (setq denote-org-capture-specifiers "%l\n%i\n%?")
+       (add-to-list 'org-capture-templates
+                    '("n" "New note (with denote.el)" plain
+                      (file denote-last-path)
+                      #'denote-org-capture
+                      :no-save t
+                      :immediate-finish nil
+                      :kill-buffer t
+                      :jump-to-captured t))))
+
+;;;; intento de hacer que dired no me muestre los archivos no relevantes
+;; como lo que terminan en ~ o #
+;; (use-package dired-x
+;;   :ensure nil
+;;   :after dired
+;;   :config
+;;   (add-hook 'dired-mode-hook (lambda () (dired-omit-mode 1))))
+
+(with-eval-after-load 'dired
+  (require 'dired-x))
+(add-hook 'dired-mode-hook
+	  (lambda () (dired-omit-mode 1) ))
+
+;; ;; probando cómo se configura ahora citar que lo cambiaron todo :(
+;; (use-package citar
+;;   :config
+;;   (setq citar-bibliography (list (concat org-roam-directory "/ref-all.bib")))
+;;   (setq citar-at-point-function 'embark-act)
+;;   (setq org-cite-insert-processor 'citar)
+;;   (setq org-cite-follow-processor 'citar)
+;;   (setq org-cite-activate-processor 'citar))
+
+;; (use-package citar-embark
+;;   :after citar embark
+;;   :no-require
+;;   :config (citar-embark-mode))

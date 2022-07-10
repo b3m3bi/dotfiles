@@ -11,7 +11,7 @@ sudo apt -y install kde-plasma-desktop plasma-nm
 - Utilidades generales de línea de comandos
 
 ```
-sudo apt install vim python3-pip stow texlive texlive-latex-extra
+sudo apt install vim python3-pip stow 
 ```
 
 - Utilidades generales de interfaz gráfica
@@ -70,9 +70,6 @@ konsave -a tipo-i3
 ```
 sudo apt install pulseaudio-modue-bluetooth
 ```
-
-- [Drivers de impresora hp](https://developers.hp.com/hp-linux-imaging-and-printing/) - en "testing" se necesita construir [paquetes específicos](https://tutorialforlinux.com/2021/02/25/step-by-step-python3-pyqt4-debian-bullseye-installation-guide/) - NO FUNCIONA :(
-
 
 ## nvim
 
@@ -155,10 +152,10 @@ sudo apt install dvipng
 
 ## Latex
 
-- Instalar xelatex
+- Utilidades básicas (`texlive` y `texlive-latex-extra`) y `xetex` (`texlive-xetex`) que es un motor de tipografías que soporta mayores funcionalidades que `pdflatex` y `latex`.
 
 ```
-sudo apt install texlive-xetex
+sudo apt install texlive texlive-latex-extra texlive-xetex
 ```
 
 - Agregar español a babel
@@ -175,16 +172,21 @@ sudo apt install texlive-fonts-extra
 
 ##  Webdev
 
-- Instalar nodejs y npm
+### Nodejs y npm
 
 ```
 sudo apt install nodejs npm
 ```
+
+### Angular
+
 - Instalar angular-cli
 
 ```
 sudo npm install -g @angular/cli
 ```
+
+### Mongodb
 
 - [Instalar mongodb](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-debian/)
 
@@ -219,6 +221,11 @@ Algunos plugins que mejoran su funcionalidad son:
 - [Zotfile](http://zotfile.com/): permite adminsitrar los archivos adjuntos (e.g., renombrarlos automáticamente)
 - [Better Bibtex](https://retorque.re/zotero-better-bibtex/): permite administrar los datos de bibliografía (e.g., generar automáticamente las claves de citas, exportar automáticamente el `.bib`)
 
- 
+## Python
 
+### jupyter
+
+```
+pip install jupyter
+```
 
