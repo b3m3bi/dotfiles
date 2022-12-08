@@ -19,6 +19,7 @@ sudo apt install vim python3-pip stow
 ```
 sudo apt install firefox ttf-mscorefonts-installer libreoffice-writer libreoffice-calc libreoffice-kf5
 ```
+
 ## Instalación de libinput-gestures
 
 - [libinput-gestures](https://github.com/bulletmark/libinput-gestures) - utilidad para agregar gestos al touchpad
@@ -197,7 +198,6 @@ echo "deb [signed-by=/etc/apt/keyrings/mongodb-5.0.gpg arch=amd64] http://repo.m
 sudo apt update && sudo apt install mongodb-org
 ```
 
-
 # R
 
 - Paquetes necesarios para installar ~juicr~:
@@ -221,7 +221,7 @@ Algunos plugins que mejoran su funcionalidad son:
 - [Zotfile](http://zotfile.com/): permite adminsitrar los archivos adjuntos (e.g., renombrarlos automáticamente)
 - [Better Bibtex](https://retorque.re/zotero-better-bibtex/): permite administrar los datos de bibliografía (e.g., generar automáticamente las claves de citas, exportar automáticamente el `.bib`)
 
-## Python
+# Python
 
 ### jupyter
 
@@ -229,3 +229,36 @@ Algunos plugins que mejoran su funcionalidad son:
 pip install jupyter
 ```
 
+# Servidores LSP
+
+Para poder utilizar servidores LSP (como [eglot](https://github.com/joaotavora/eglot) de emacs) se necesitan installar los servidores:
+
+## R
+
+Para instalar [languageserver](https://github.com/REditorSupport/languageserver/). Primero instalar las dependencias:
+
+```
+apt install --assume-yes --no-install-recommends build-essential libcurl4-openssl-dev libssl-dev libxml2-dev r-base
+```
+
+y luego en R
+
+```
+intall.packages("languageserver")
+```
+
+## python
+
+Para instalar [python LSP Server](https://github.com/python-lsp/python-lsp-server) se puede usar ~pip~:
+
+```
+pip install python-lsp-server
+```
+
+o se puede instalar desde ~apt~:
+
+```
+sudo apt install python3-pylsp
+```
+
+Nótese que este servidor LSP depdende de [Jedi](https://github.com/davidhalter/jedi) para el autocompletado y la ayuda. Y adicionalmente se pueden instalar dependencias opcionales para agregar otras funcionalidades como: identificar errores (pyflakes o flake8, mccabe), revisión y autoformato de estilo (pycodestyle, pydocstyle, autopep8 o YAPF), renombrar (rope). Actualmente solo uso pyflakes.
