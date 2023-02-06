@@ -262,3 +262,11 @@ sudo apt install python3-pylsp
 ```
 
 Nótese que este servidor LSP depdende de [Jedi](https://github.com/davidhalter/jedi) para el autocompletado y la ayuda. Y adicionalmente se pueden instalar dependencias opcionales para agregar otras funcionalidades como: identificar errores (pyflakes o flake8, mccabe), revisión y autoformato de estilo (pycodestyle, pydocstyle, autopep8 o YAPF), renombrar (rope). Actualmente solo uso pyflakes.
+
+## Wallpapers
+
+Descargar wallpapers de KDE:
+
+```
+git clone https://invent.kde.org/plasma/plasma-workspace-wallpapers
+```
