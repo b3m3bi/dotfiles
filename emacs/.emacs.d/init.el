@@ -45,6 +45,7 @@
 	pulsar 
 	code-cells
 	ess
+        modus-themes
 	citar			  ; melpa
 	org-roam		  ; melpa
 	citeproc		  ; melpa
@@ -59,7 +60,6 @@
 ;; (setq package-selected-packages package-list)
 ;; (package-install-selected-packages)
 ;; (package-autoremove)
-
 
 ;;; vc
 ;; seguir symlinks sin tener que confirmar
@@ -77,16 +77,14 @@
 ;; shortcuts y descripciones
 (marginalia-mode 1)
 (define-key minibuffer-local-map (kbd "M-A") 'marginalia-cycle)
-;; (setq marginalia-annotator-registry
-;;       (assq-delete-all 'buffer marginalia-annotator-registry))
 
 ;; corfu es un front-end para autocompletado en el buffer
 ;; funciona usando dabbrevs (C-/) y capfs. Y también puede
 ;; usar lo que se recibe de un servidor LSP
 (setq corfu-auto t)
-(add-hook 'python-mode-hook 'corfu-mode)
-(add-hook 'emacs-lisp-mode-hook 'corfu-mode)
-(add-hook 'R-mode-hook 'corfu-mode)
+(add-hook 'python-mode-hook #'corfu-mode)
+(add-hook 'emacs-lisp-mode-hook #'corfu-mode)
+(add-hook 'R-mode-hook #'corfu-mode)
 
 ;;; Estilo de completado
 
@@ -113,7 +111,6 @@
 ;; se activa eglot en varios modos:
 (add-hook 'python-mode-hook #'eglot-ensure)
 (add-hook 'R-mode-hook #'eglot-ensure)
-
 
 ;;;; org-roam ;;;;;;
 
@@ -200,7 +197,7 @@
 
 ;;;;; dired ;;;;
 (setq dired-isearch-filenames 'dwim)
-;; cargar dired-x y ocultar archivos no interesantes (e.g., backups, auto-guardados)
+;; cargar dired-x y ocultar archivos no interesantes (e.g., backups ~, auto-guardados #)
 (with-eval-after-load 'dired
   (define-key dired-mode-map (kbd "M-+") 'dired-create-empty-file)
   (require 'dired-x))
@@ -219,7 +216,7 @@
 				 ;(dot . t)
 				 ;(ipython . t)
 			       ))
-;; cambio de nombre e comando usado para correr python
+;; cambio de nombre el comando usado para correr python
 (setq org-babel-python-command "python3")
 ;; mostrar las imágenes después de ejecutar un bloque de código
 (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
@@ -278,7 +275,8 @@
 ;; templates
 (setq org-capture-templates
       '(("g" "GTD inbox" entry (file "GTD/inbox.org") "* TODO %?")
-	("z" "Zettel inbox" entry (file "Zettel/inbox.org") "* TODO %?")))
+	;; ("z" "Zettel inbox" entry (file "Zettel/inbox.org") "* TODO %?")
+	))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; TEMAS Y APARIENCIA ;;;;;;;;;;
@@ -289,24 +287,16 @@
 ;; se configura el tema y luego se carga
 ;; poner en negritas e itálicas algunos elementos como
 ;; nombres de funciones y comentarios
+(require 'modus-themes)
 (setq modus-themes-bold-constructs t)
 (setq modus-themes-italic-constructs t)
-(setq modus-themes-syntax nil)
-(setq modus-themes-mode-line '(accented borderless)) ;; cambiar esto en versión 4
-(setq modus-themes-completions 'opinionated)
-(setq modus-themes-fringes nil)
-(setq modus-themes-hl-line '(accented)) ;; cambiar esto en versión 4 
-(setq modus-themes-subtle-line-numbers t)
-(setq modus-themes-paren-match nil)
-(setq modus-themes-region '(bg-only accented)) 
 (setq modus-themes-org-blocks 'gray-background)
-(setq modus-themes-org-agenda
-      '((header-block . (scale-title))
-	(header-date . (bold-today grayscale))
-	(event . (italic))))
-(setq modus-themes-variable-pitch-ui nil)
-;; (load-theme 'modus-operandi)
-;; (global-set-key (kbd "<f5>") #'modus-themes-toggle)
+(setq modus-themes-common-palette-overrides
+      '((border-mode-line-active bg-mode-line-active)
+	(border-mode-line-inactive bg-mode-line-inactive)
+	(fringe unspecified)))
+(load-theme 'modus-vivendi :no-confirm)
+(global-set-key (kbd "<f5>") #'modus-themes-toggle)
 
 ;;;;;;; olivetti ;;;;;;
 
@@ -527,7 +517,7 @@
 (global-set-key (kbd "C-c n r") #'denote-rename-file)
 (global-set-key (kbd "C-c n C-r") #'denote-rename-file-using-front-matter)
 ;; (global-set-key (kbd "C-c n f") #'denote-open-or-create)
-(global-set-key (kbd "C-c n i") #'denote-link-or-create)
+;; (global-set-key (kbd "C-c n i") #'denote-link-or-create)
 (global-set-key (kbd "C-c n b") #'denote-link-backlinks)
 (setq denote-excluded-directories-regexp "img")
 
@@ -539,6 +529,7 @@
 (add-to-list 'load-path (expand-file-name "denote-completing-format" "~/.emacs.d/b3m3bi-packages/"))
 (require 'denote-completing-format)
 (global-set-key (kbd "C-c n f") #'denote-completing-format-open-or-create)
+(global-set-key (kbd "C-c n i") #'denote-completing-format-link-or-create)
 (setq denote-completing-format-subdir-width 20)
 (setq denote-completing-format-keywords-width 25)
 (setq denote-completing-format-create-function 'denote-subdirectory)
@@ -570,31 +561,31 @@
 
 ;;;;; almost-mono-themes ;;;;;
 
-(add-to-list 'load-path (expand-file-name "almost-mono-themes" "~/.emacs.d/manual-packages"))
-(add-to-list 'custom-theme-load-path (expand-file-name "almost-mono-themes" "~/.emacs.d/manual-packages"))
-(mapc #'disable-theme custom-enabled-themes)
-;; (load-theme 'almost-mono-white :no-confirm)
-(load-theme 'modus-operandi :no-confirm)
+;; (add-to-list 'load-path (expand-file-name "almost-mono-themes" "~/.emacs.d/manual-packages"))
+;; (add-to-list 'custom-theme-load-path (expand-file-name "almost-mono-themes" "~/.emacs.d/manual-packages"))
+;; (mapc #'disable-theme custom-enabled-themes)
+;; ;; (load-theme 'almost-mono-white :no-confirm)
+;; (load-theme 'modus-vivendi :no-confirm)
 
 ;;;;; función para cambiar temas ;;;;;
-(setq themes-to-toggle '(modus-operandi modus-vivendi))
-;;(setq themes-to-toggle (custom-available-themes))
-(defun b3m3bi/toggle-themes ()
-  "Toggle between themes defined on `themes-to-toggle'."
-  (interactive)
-  (if-let* ((themes themes-to-toggle)
-	    (number-of-themes (length themes))
-	    (current-theme (car custom-enabled-themes))
-	    (current-theme-index (cl-position current-theme themes))
-	    (next-theme-index (if (eq current-theme-index (- number-of-themes 1))
-				  0
-				(+ current-theme-index 1)))
-	    (next-theme (nth next-theme-index themes)))
-      (progn
-	(mapc #'disable-theme custom-enabled-themes)
-	(load-theme next-theme :no-confirm)
-	(message "Load: %s theme" next-theme))
-    (user-error "Error ocurred :(")))
-  (global-set-key (kbd "<f5>") #'b3m3bi/toggle-themes)
+;; (setq themes-to-toggle '(modus-operandi modus-vivendi))
+;; ;;(setq themes-to-toggle (custom-available-themes))
+;; (defun b3m3bi/toggle-themes ()
+;;   "Toggle between themes defined on `themes-to-toggle'."
+;;   (interactive)
+;;   (if-let* ((themes themes-to-toggle)
+;; 	    (number-of-themes (length themes))
+;; 	    (current-theme (car custom-enabled-themes))
+;; 	    (current-theme-index (cl-position current-theme themes))
+;; 	    (next-theme-index (if (eq current-theme-index (- number-of-themes 1))
+;; 				  0
+;; 				(+ current-theme-index 1)))
+;; 	    (next-theme (nth next-theme-index themes)))
+;;       (progn
+;; 	(mapc #'disable-theme custom-enabled-themes)
+;; 	(load-theme next-theme :no-confirm)
+;; 	(message "Load: %s theme" next-theme))
+;;     (user-error "Error ocurred :(")))
 
-(custom-available-themes)
+;; (global-set-key (kbd "<f5>") #'b3m3bi/toggle-themes)
+(add-hook 'python-mode-hook #'linum-mode)
