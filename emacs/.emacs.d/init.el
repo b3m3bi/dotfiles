@@ -1,4 +1,3 @@
-
 ;;; Configuración general
 
 ;; se quita el mensaje de inicio
@@ -22,6 +21,9 @@
 ;; activar modo de precisión de scroll
 (pixel-scroll-precision-mode 1)
 
+;; cambio el directorio de backups de emacs
+(setq backup-directory-alist '(( "." . "~/.emacs.d/backups")))
+
 ;;;; custom
 ;; se mandan las ediciones de customize a otro archivo y se cargan
 ;; pero procurar no usar custom.el
@@ -37,14 +39,13 @@
 ;; que hacer `require a cada paquete
 ;; (package-initialize)		 
 
-;; lista de paquetes que uso
+;;; lista de paquetes que uso
 (setq package-list 
       '(
 	vertico
 	marginalia
 	corfu
 	orderless
-	pulsar 
 	code-cells
 	ess
         modus-themes
@@ -54,14 +55,11 @@
 	virtualenvwrapper
 	org-variable-pitch
 	citar			  ; melpa
-	org-roam		  ; melpa
 	citeproc		  ; melpa
 	olivetti		  ; melpa
 	markdown-mode		  ; melpa nongnu
 	yaml-mode		  ; melpa nongnu
-	anzu
 	openwith
-	julia-repl
 	))
 ;; package registra los paquetes installados en `package-selected-packages (en
 ;; una vairable en custom.init) por lo que para (re)installar los paquetes
@@ -72,7 +70,7 @@
 ;; (package-autoremove)
 
 ;;; vc
-;; seguir symlinks sin tener que confirmar
+;; seguir symlinks de repos bajo control de versión sin tener que confirmar
 (setq vc-follow-symlinks nil)
 
 ;;; vertico
@@ -153,30 +151,9 @@
     (define-key map (kbd "M-[") 'code-cells-backward-cell)))
 (add-hook 'python-mode-hook #'code-cells-mode)
 
-;;;;; dired ;;;;
-(setq dired-isearch-filenames 'dwim)
-(with-eval-after-load 'dired
-  (define-key dired-mode-map (kbd "M-+") 'dired-create-empty-file)
-  ;; cargar dired-x y ocultar archivos no interesantes
-  ;; (e.g., backups ~, auto-guardados #)
-  (require 'dired-x))
-(add-hook 'dired-mode-hook
-	  (lambda ()
-	    (dired-omit-mode 1)))
-(add-hook 'dired-mode-hook #'dired-hide-details-mode)
-
-;; cambio el directorio de backups de emacs
-(setq backup-directory-alist '(( "." . "~/.emacs.d/backups")))
-
-;;;;; winner-mode ;;;;;
-
-;; historial de ordenamiento de las ventanas (páneles)
-;; regresar a config previa con C-c {flechas}
-(winner-mode 1)
-
 ;;;;; denote ;;;;;
-(setq denote-directory (expand-file-name "~/Zettel"))
-(setq org-cite-global-bibliography (list (concat denote-directory "/ref-all.bib")))
+(setq denote-directory (expand-file-name "~/zttlkstn"))
+(setq org-cite-global-bibliography (list (concat denote-directory "/ref-all-2.bib")))
 (setq denote-file-type 'org)
 (setq denote-known-keywords '("matemáticas" "computación" "biología" "física"
 			      "economía" "academia" "ilustración" "productividad"))
@@ -202,7 +179,6 @@
 ;; (setq denote-completing-format-create-function 'denote-subdirectory)
  
 ;;;;; citar ;;;;;
-(setq org-roam-directory "~/org/Zettel")
 (setq citar-bibliography org-cite-global-bibliography)
 (setq org-cite-insert-processor 'citar)
 (setq org-cite-follow-processor 'citar)
@@ -214,30 +190,28 @@
 ;;;;; virtualenvwrapper ;;;;;
 
 (require 'virtualenvwrapper)
+(venv-initialize-interactive-shells)
 (venv-initialize-eshell)
-
-;;;;;; anzu ;;;;;;
-;; agrega el número de resultados de una búsqueda en la mode-line
-(global-anzu-mode 1)
+(setq venv-location "~/Envs")
 
 ;;;;;; jinx ;;;;;
 ;; corrector ortográfico que corrige todo lo que se ve del buffer
 (require 'jinx)
 (setq jinx-languages "es_MX.UTF-8")
 (setq ispell-dictionary "es")
-(keymap-global-set "<remap> <ispell-word>" #'jinx-correct)
+;; (keymap-global-set "<remap> <ispell-word>" #'jinx-correct)
 
-;;;;; latex ;;;;;
-;; se agrega una nueva clase para exportar en clase "book" pero sin considerar "part"
-(require 'ox-latex)
-(add-to-list 'org-latex-classes
-	     '("tesis" "\\documentclass[11pt]{tesis}"
-	       ("\\chapter{%s}" . "\\chapter*{%s}")
-	       ("\\section{%s}" . "\\section*{%s}")
-	       ("\\subsection{%s}" . "\\subsection*{%s}")
-	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
-	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+;; ;;;;; latex ;;;;;
+;; ;; se agrega una nueva clase para exportar en clase "book" pero sin considerar "part"
+;; (require 'ox-latex)
+;; (add-to-list 'org-latex-classes
+;; 	     '("tesis" "\\documentclass[11pt]{tesis}"
+;; 	       ("\\chapter{%s}" . "\\chapter*{%s}")
+;; 	       ("\\section{%s}" . "\\section*{%s}")
+;; 	       ("\\subsection{%s}" . "\\subsection*{%s}")
+;; 	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+;; 	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+;; 	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -278,7 +252,7 @@
 ;; evitar que tab y enter tengan significado especial en las tablas
 (setq org-table-auto-blank-field nil)
 ;; archivos disponibles para construir agenda
-(setq org-agenda-files '("GTD/gtd.org" "GTD/agenda.org"))
+(setq org-agenda-files '("gtd.org" "agenda.org"))
 ;; definir directorio de org y archivos de notas
 (setq org-directory "~/org")
 (setq org-default-notes-file (concat org-directory "/notes.org"))
@@ -337,19 +311,6 @@
 ;; definir valores de la fuente fija (mono)
 (set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 110 :weight 'light)
 
-;;;;;;; pulsar ;;;;;;;
-
-;; Resalta momentaneamente la línea donde esta el point
-;; después ejecutar las funciones en `pulsar-pulse-functions'
-;; color de resaltado
-(setq pulsar-face 'pulsar-yellow)
-;; activar resaltado en todas las funciones que afectan a la ventana activa
-(setq pulsar-delay 0.05)
-;; atajo para relsatar linea actual
-(global-set-key (kbd "C-c p") 'pulsar-pulse-line)
-;; se activa globalmente el modo
-(pulsar-global-mode 1)
-
 ;;;;;; org-variable-pitch ;;;;;;
 
 (require 'org-variable-pitch)
@@ -358,14 +319,15 @@
 (add-to-list 'org-variable-pitch-fixed-faces 'font-lock-comment-face)
 (setq org-variable-pitch-fontify-headline-prefix nil)
 
-(add-to-list 'load-path (expand-file-name "org-variable-pitch-custom" "~/.emacs.d/b3m3bi-packages/"))
-(require 'org-variable-pitch-custom)
-(add-to-list 'org-variable-pitch-custom-group 'org-document-title)
-(add-to-list 'org-variable-pitch-custom-group 'org-document-info)
+;; (add-to-list 'load-path (expand-file-name "org-variable-pitch-custom" "~/.emacs.d/b3m3bi-packages/"))
+;; (require 'org-variable-pitch-custom)
+;; (add-to-list 'org-variable-pitch-custom-group 'org-document-title)
+;; (add-to-list 'org-variable-pitch-custom-group 'org-document-info)
 
 ;;;;;; linum-mode ;;;;;;
 (add-hook 'python-mode-hook #'display-line-numbers-mode)
 (add-hook 'R-mode-hook #'display-line-numbers-mode)
+(add-hook 'lisp-mode-hook #'display-line-numbers-mode)
 
 ;;;;;; openwith ;;;;;;
 (require 'openwith)
@@ -376,41 +338,41 @@
 ;;;;;;;;;;;;;;; FUNCIONES PERZONALIZADAS ;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun last-saturday-of-month (date)
-  "Return `t` if DATE is the last saturday of the month."
-(let*
-    ((day (calendar-extract-day date))
-     (month (calendar-extract-month date))
-     (year (calendar-extract-year date))
-     (last-day-month (calendar-last-day-of-month month year))
-     (num-next-day-of-week (+ day 7)))
-  (and
-   ;; true if is saturday
-   (eq (calendar-day-of-week date) 6)
-   ;; true if next
-   (> num-next-day-of-week last-day-month))))
+;; (defun last-saturday-of-month (date)
+;;   "Return `t` if DATE is the last saturday of the month."
+;; (let*
+;;     ((day (calendar-extract-day date))
+;;      (month (calendar-extract-month date))
+;;      (year (calendar-extract-year date))
+;;      (last-day-month (calendar-last-day-of-month month year))
+;;      (num-next-day-of-week (+ day 7)))
+;;   (and
+;;    ;; true if is saturday
+;;    (eq (calendar-day-of-week date) 6)
+;;    ;; true if next
+;;    (> num-next-day-of-week last-day-month))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; función para activar eglot en `org-edit-special tomada de
-;; https://github.com/joaotavora/eglot/issues/216#issuecomment-1052931508
-(defun mb/org-babel-edit:python ()
-  "Edit python src block with lsp support by tangling the block and
-then setting the org-edit-special buffer-file-name to the
-absolute path. Finally load eglot."
-  (interactive)
-  ;; org-babel-get-src-block-info returns lang, code_src, and header
-  ;; params; Use nth 2 to get the params and then retrieve the :tangle
-  ;; to get the filename
-  (setq mb/tangled-file-name (expand-file-name (assoc-default :tangle (nth 2 (org-babel-get-src-block-info)))))
-  ;; tangle the src block at point 
-  (org-babel-tangle '(4))
-  (org-edit-special)
-  ;; Now we should be in the special edit buffer with python-mode. Set
-  ;; the buffer-file-name to the tangled file so that pylsp and
-  ;; plugins can see an actual file.
-  (setq-local buffer-file-name mb/tangled-file-name)
-  (eglot-ensure))
+;; ;; función para activar eglot en `org-edit-special tomada de
+;; ;; https://github.com/joaotavora/eglot/issues/216#issuecomment-1052931508
+;; (defun mb/org-babel-edit:python ()
+;;   "Edit python src block with lsp support by tangling the block and
+;; then setting the org-edit-special buffer-file-name to the
+;; absolute path. Finally load eglot."
+;;   (interactive)
+;;   ;; org-babel-get-src-block-info returns lang, code_src, and header
+;;   ;; params; Use nth 2 to get the params and then retrieve the :tangle
+;;   ;; to get the filename
+;;   (setq mb/tangled-file-name (expand-file-name (assoc-default :tangle (nth 2 (org-babel-get-src-block-info)))))
+;;   ;; tangle the src block at point 
+;;   (org-babel-tangle '(4))
+;;   (org-edit-special)
+;;   ;; Now we should be in the special edit buffer with python-mode. Set
+;;   ;; the buffer-file-name to the tangled file so that pylsp and
+;;   ;; plugins can see an actual file.
+;;   (setq-local buffer-file-name mb/tangled-file-name)
+;;   (eglot-ensure))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; COSAS NUEVAS PARA PROBAR ;;;;;;;;;;
@@ -474,73 +436,109 @@ absolute path. Finally load eglot."
 ;; Cosas para quitar
 ;;;; org-roam ;;;;;;
 
-;; implementa ideas del método zettelkasten para tomar notas
-(setq org-roam-v2-ack t)
-(setq org-roam-directory "~/org/Zettel")
-(org-roam-db-autosync-mode 1)
-(define-key global-map (kbd "C-c m f") #'org-roam-node-find)
-;; (define-key global-map (kbd "C-c n i") #'org-roam-node-insert)
-;; (define-key global-map (kbd "C-c n c") #'org-roam-capture)
-;; (define-key global-map (kbd "C-c n b") #'org-roam-buffer-toggle)
-;; configurar cómo se despliega el buffer de info del nodo
-(add-to-list 'display-buffer-alist
-	       '("\\*org-roam\\*"
-		 (display-buffer-in-direction)
-		 (direction . right)
-		 (window-width . 0.33)
-		 (window-height . fit-window-to-buffer)))
-;; definir los templates de captura
-;; (key description type template_of_capture(e.g.,lista,heading) template_file/node)
-(setq org-roam-capture-templates
-	'(("d" "default" plain "%?"
-	   :if-new (file+head "main/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}")
-	   :unnarrowed t
-	   :empty-lines-before 1)
-	  ("r" "reference" plain "%?"
-	   :if-new (file+head "reference/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}")
-	   :unnarrowed t
-	   :empty-lines-before 1)
-	  ("a" "article" plain "\n%?"
-	   :if-new (file+head "articles/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}")
-	   :unnarrowed t)
-	  ("p" "project" plain "\n%?"
-	   :if-new (file+head "projects/%<%Y%m%d%H%M%S>-${slug}.org"
-			      "#+title: ${title}")
-	   :unnarrowed t
-	   :empty-lines-before 1)
-	  ("i" "inbox Zettel" entry "* TODO ${title} \n%?"
-	   :target (node "inbox Zettel")
-	   :unnarrowed t)))
+;; ;; implementa ideas del método zettelkasten para tomar notas
+;; (setq org-roam-v2-ack t)
+;; (setq org-roam-directory "~/org/Zettel")
+;; (org-roam-db-autosync-mode 1)
+;; (define-key global-map (kbd "C-c m f") #'org-roam-node-find)
+;; ;; (define-key global-map (kbd "C-c n i") #'org-roam-node-insert)
+;; ;; (define-key global-map (kbd "C-c n c") #'org-roam-capture)
+;; ;; (define-key global-map (kbd "C-c n b") #'org-roam-buffer-toggle)
+;; ;; configurar cómo se despliega el buffer de info del nodo
+;; (add-to-list 'display-buffer-alist
+;; 	       '("\\*org-roam\\*"
+;; 		 (display-buffer-in-direction)
+;; 		 (direction . right)
+;; 		 (window-width . 0.33)
+;; 		 (window-height . fit-window-to-buffer)))
+;; ;; definir los templates de captura
+;; ;; (key description type template_of_capture(e.g.,lista,heading) template_file/node)
+;; (setq org-roam-capture-templates
+;; 	'(("d" "default" plain "%?"
+;; 	   :if-new (file+head "main/%<%Y%m%d%H%M%S>-${slug}.org"
+;; 			      "#+title: ${title}")
+;; 	   :unnarrowed t
+;; 	   :empty-lines-before 1)
+;; 	  ("r" "reference" plain "%?"
+;; 	   :if-new (file+head "reference/%<%Y%m%d%H%M%S>-${slug}.org"
+;; 			      "#+title: ${title}")
+;; 	   :unnarrowed t
+;; 	   :empty-lines-before 1)
+;; 	  ("a" "article" plain "\n%?"
+;; 	   :if-new (file+head "articles/%<%Y%m%d%H%M%S>-${slug}.org"
+;; 			      "#+title: ${title}")
+;; 	   :unnarrowed t)
+;; 	  ("p" "project" plain "\n%?"
+;; 	   :if-new (file+head "projects/%<%Y%m%d%H%M%S>-${slug}.org"
+;; 			      "#+title: ${title}")
+;; 	   :unnarrowed t
+;; 	   :empty-lines-before 1)
+;; 	  ("i" "inbox Zettel" entry "* TODO ${title} \n%?"
+;; 	   :target (node "inbox Zettel")
+;; 	   :unnarrowed t)))
 
-;; método para obtener el tipo (nombre de directorio) del nodo
-;; tomado de https://jethrokuan.github.io/org-roam-guide/
-(cl-defmethod org-roam-node-type ((node org-roam-node))
-  "Return the TYPE of NODE."
-  (condition-case nil
-	(file-name-nondirectory
-	 (directory-file-name
-	  (file-name-directory
-	   (file-relative-name (org-roam-node-file node) org-roam-directory))))
-    (error "")))
+;; ;; método para obtener el tipo (nombre de directorio) del nodo
+;; ;; tomado de https://jethrokuan.github.io/org-roam-guide/
+;; (cl-defmethod org-roam-node-type ((node org-roam-node))
+;;   "Return the TYPE of NODE."
+;;   (condition-case nil
+;; 	(file-name-nondirectory
+;; 	 (directory-file-name
+;; 	  (file-name-directory
+;; 	   (file-relative-name (org-roam-node-file node) org-roam-directory))))
+;;     (error "")))
 
-;; agregar el tipo al template de completado
-(setq org-roam-node-display-template
-	(concat "${type:12} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-
-
-
-(add-to-list 'load-path (expand-file-name "netlogo-mode" "~/.emacs.d/manual-packages"))
-(require 'netlogo-mode)
+;; ;; agregar el tipo al template de completado
+;; (setq org-roam-node-display-template
+;; 	(concat "${type:12} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
 
 
-(require 'julia-repl)
-(add-hook 'julia-mode-hook 'julia-repl-mode)
 
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
+;; (add-to-list 'load-path (expand-file-name "netlogo-mode" "~/.emacs.d/manual-packages"))
+;; (require 'netlogo-mode)
 
 
-(define-key python-mode-map (kbd "C-c C-q") 'recompile)
+;; (require 'julia-repl)
+;; (add-hook 'julia-mode-hook 'julia-repl-mode)
+
+;; (when (memq window-system '(mac ns x))
+;;   (exec-path-from-shell-initialize))
+
+
+;; (define-key python-mode-map (kbd "C-c C-q") 'recompile)
+;; 
+
+;; ;;;;; winner-mode ;;;;;
+
+;; ;; historial de ordenamiento de las ventanas (páneles)
+;; ;; regresar a config previa con C-c {flechas}
+;; (winner-mode 1)
+
+;; ;;;;; dired ;;;;
+;; (setq dired-isearch-filenames 'dwim)
+;; (with-eval-after-load 'dired
+;;   (define-key dired-mode-map (kbd "M-+") 'dired-create-empty-file)
+;;   ;; cargar dired-x y ocultar archivos no interesantes
+;;   ;; (e.g., backups ~, auto-guardados #)
+;;   (require 'dired-x))
+;; (add-hook 'dired-mode-hook
+;; 	  (lambda ()
+;; 	    (dired-omit-mode 1)))
+;; (add-hook 'dired-mode-hook #'dired-hide-details-mode)
+
+;; ;;;;;; anzu ;;;;;;
+;; ;; agrega el número de resultados de una búsqueda en la mode-line
+;; (global-anzu-mode 1)
+
+;; ;;;;;;; pulsar ;;;;;;;
+
+;; ;; Resalta momentaneamente la línea donde esta el point
+;; ;; después ejecutar las funciones en `pulsar-pulse-functions'
+;; ;; color de resaltado
+;; (setq pulsar-face 'pulsar-yellow)
+;; ;; activar resaltado en todas las funciones que afectan a la ventana activa
+;; (setq pulsar-delay 0.05)
+;; ;; atajo para relsatar linea actual
+;; (global-set-key (kbd "C-c p") 'pulsar-pulse-line)
+;; ;; se activa globalmente el modo
+;; (pulsar-global-mode 1)

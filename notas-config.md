@@ -22,6 +22,8 @@ sudo apt install firefox ttf-mscorefonts-installer libreoffice-writer libreoffic
 
 ## Instalación de libinput-gestures
 
+En wayland ya vienen por defecto los gestos, pero no parece haber forma fácil de configurarlos.
+
 - [libinput-gestures](https://github.com/bulletmark/libinput-gestures) - utilidad para agregar gestos al touchpad
 
 ```
