@@ -1,116 +1,255 @@
-;;; Configuración general
+;;; custom
+;; se mandan las ediciones de customize a otro archivo y se cargan
+(setq custom-file (locate-user-emacs-file "custom.el"))
+(load custom-file :no-error-if-file-is-missing)
+
+;;; package
+(require 'package)
+(package-initialize)
+;; se agrega el repositorio de melpa
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+;;; use-package
+;; asegurarse de que use-package esté instalado
+(when (< emacs-major-version 29)
+  (unless (package-installed-p 'use-package)
+    (unless package-archive-contents
+      (package-refresh-contents))
+    (package-install 'use-package)))
 
 ;; se quita el mensaje de inicio
 (setq inhibit-startup-message t)
-
 ;; se quita toolbar, menubar y scrollbar
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
-
 ;; flashes en lugar de sonido feo
 (setq visible-bell t)
-
 ;; cambiar interprete de python a python3 (como se llama en debian 12)
 (setq python-shell-interpreter "python3")
-
-;; guarda la historia del minibuffer en el archivo
-;; ~/.emacs.d/history y la utiliza en sesiones futuras
-(savehist-mode 1)
-
 ;; activar modo de precisión de scroll
 (pixel-scroll-precision-mode 1)
-
 ;; cambio el directorio de backups de emacs
 (setq backup-directory-alist '(( "." . "~/.emacs.d/backups")))
 
-;;;; custom
-;; se mandan las ediciones de customize a otro archivo y se cargan
-;; pero procurar no usar custom.el
-(setq custom-file "~/.emacs.d/custom.el")
-(load custom-file)
+;;; exec-path-from-shell
+;; asegurarse que las variables de la terminal sean
+;; accesibles en las terminales de emacs
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
-;;; package.el
-(require 'package)
-;; se agrega el repo de melpa
-;; para actualizar la lista de paquetes: M-x package-refresh-contents RET
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-;; se le pide a package que cargue y active los paquetes, así ya no se tiene
-;; que hacer `require a cada paquete
-;; (package-initialize)		 
-
-;;; lista de paquetes que uso
+;; lista de paquetes que uso
 (setq package-list 
       '(
-	vertico
-	marginalia
-	corfu
+	;; vertico 
+	;; marginalia
+	;; corfu
 	orderless
 	code-cells
 	ess
         modus-themes
-	denote
+	;; denote
 	jinx
 	rainbow-mode
-	virtualenvwrapper
+	conda
 	org-variable-pitch
 	citar			  ; melpa
 	citeproc		  ; melpa
 	olivetti		  ; melpa
-	markdown-mode		  ; melpa nongnu
+	;; markdown-mode		  ; melpa nongnu
 	yaml-mode		  ; melpa nongnu
 	openwith
+	exec-path-from-shell 
 	))
-;; package registra los paquetes installados en `package-selected-packages (en
-;; una vairable en custom.init) por lo que para (re)installar los paquetes
+;; package registra los paquetes instalados en `package-selected-packages (en
+;; una variable en custom.init) por lo que para (re)instalar los paquetes
 ;; con `package-install-selected-packages o para eliminar automáticamente paquetes
 ;; no usados con `package-autoremove se puede usar dicha variable:
 ;; (setq package-selected-packages package-list)
 ;; (package-install-selected-packages)
 ;; (package-autoremove)
 
-;;; vc
-;; seguir symlinks de repos bajo control de versión sin tener que confirmar
-(setq vc-follow-symlinks nil)
+(use-package vertico
+  :ensure t
+  :hook (after-init . vertico-mode)
+  :config
+  (vertico-mouse-mode 1)
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
 
-;;; vertico
-;; Vertico es una interfáz gráfica de completado (front-end)
-;; vertical minimalista y modular fácil de extender (es
-;; una alternativa al UI de helm, ivy, selectrum, ido,
-;; icomplete, etc.)
-(vertico-mode 1)
-(vertico-mouse-mode 1)
-(add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
+(use-package marginalia
+  :ensure t
+  :hook (after-init . marginalia-mode))
 
-;; marginalia agrega anotaciones al minibuffer sobre
-;; shortcuts y descripciones
-(marginalia-mode 1)
-;; (define-key minibuffer-local-map (kbd "M-A") 'marginalia-cycle)
+(use-package orderless 
+  :ensure t
+  :config
+  (setq completion-styles '(orderless basic))
+  (setq completion-category-defaults nil)
+  (setq completion-category-overrides
+	'((file (styles basic partial-completion)))))
 
-;; corfu es un front-end para autocompletado en el buffer
-;; funciona usando dabbrevs (C-/) y capfs. Y también puede
-;; usar lo que se recibe de un servidor LSP
-(setq corfu-auto t)
-(add-hook 'python-mode-hook #'corfu-mode)
-(add-hook 'emacs-lisp-mode-hook #'corfu-mode)
-(add-hook 'R-mode-hook #'corfu-mode)
+(use-package savehist
+  :ensure nil
+  :hook (after-init . savehist-mode))
 
-;;; Estilo de completado
+(use-package corfu
+  :ensure t
+  :hook ((python-ts-mode emacs-lisp-mode ess-mode). corfu-mode)
+  :bind (:map corfu-map ("<tab>" . corfu-complete))
+  :config
+  (setq tab-always-indent 'complete)
+  (setq corfu-preview-current nil)
+  (setq corfu-min-width 20)
+  (setq corfu-popupinfo-delay '(1.5 . 0.5))
+  (corfu-popupinfo-mode 1)
+  (with-eval-after-load 'savehist
+    (corfu-history-mode 1)
+    (add-to-list 'savehist-additional-variables 'corfu-history)))
 
-;; El estilo de completado (back-end) determina cómo tratar la
-;; búsqueda para generar conincidencias. Existen varios
-;; estilos: basic, flex, substing, etc.
-;; Orderless es un estilo que divide un partrón en
-;; componentes separados por espacios y que genera coincidencias
-;; con todos los componentes en cualquier orden
-(setq completion-styles '(orderless basic))
-;; en el caso de búsqueda de archivos se usa otro estilo
-;; que permite hacer búsquedas como /u/l/sh para /user/local/share,
-;; también se debe modificar la búsqueda de eglot para que use orderless
-;; en el autocompletado
-(setq completion-category-overrides
-      '((eglot (styles orderless))
-	(file (styles basic partial-completion))))
+(use-package markdown-mode
+  :ensure t
+  :defer t
+  :config
+  (setq markdown-enable-math t))
+
+(use-package emacs
+  :custom
+  (read-extended-command-predicate #'command-completion-default-include-p))
+
+(use-package eglot
+  :ensure nil)
+
+(use-package vc
+  :ensure nil
+  :defer t
+  :config
+  (setq vc-follow-symlinks nil))
+
+(setq zettel-dir (expand-file-name "~/zttlkstn"))
+ 
+(use-package denote
+  :ensure nil
+  :config
+  (setq denote-directory zettel-dir)
+  (setq denote-file-type 'org)
+  (setq denote-known-keywords '("matemáticas" "computación" "biología" "física"
+				"economía" "academia" "ilustración" "productividad"))
+  (setq denote-excluded-keywords-regexp "[0-9]")
+  (setq denote-excluded-directories-regexp ".*img.*\\|.*ltx.*")
+  :hook
+  (dired-mode . denote-dired-mode)
+  :bind
+  (("C-c n n" . denote-subdirectory)
+   ("C-c n r" . denote-rename-file)
+   ("C-c n C-r" . denote-rename-file-using-front-matter)
+   ("C-c n f" . denote-open-or-create)
+   ("C-c n i" . denote-link-or-create)
+   ("C-c n b" . denote-link-backlinks)))
+
+(use-package display-line-numbers
+  :ensure nil
+  :hook ((python-ts-mode ess-mode emacs-lisp-mode html-mode css-mode js-mode) . display-line-numbers-mode))
+
+(use-package nerd-icons
+  :ensure t)
+
+(use-package nerd-icons-completion
+  :ensure t
+  :after marginalia
+  :config
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+(use-package nerd-icons-corfu
+  :ensure t
+  :after corfu
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+
+(use-package nerd-icons-dired
+  :ensure t
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+
+(use-package org
+  :ensure nil
+  :config
+  ;; se activan lenguajes para babel
+  (org-babel-do-load-languages 'org-babel-load-languages
+			       '((python  . t)
+				 (R . t)
+				 (emacs-lisp . t)))
+  ;; cambio de nombre el comando usado para correr python
+  (setq org-babel-python-command "python3")
+  ;; mostrar las imágenes después de ejecutar un bloque de código
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  ;; iniciar con modo de identación virtual
+  (setq org-startup-indented t)
+  ;; iniciar con secciones desplegadas (nótese que `showeverything
+  ;; interfiere con variable `org-hide-block-startup)
+  (setq org-startup-folded 'nofold)
+  ;; colapsar bloques de código
+  (setq org-hide-block-startup nil)
+  ;; permitir cambiar el tamaño de las imágenes en el preview
+  ;; usando una clave (e.g., #+ATTR_ORG: :width 300px)
+  (setq org-image-actual-width nil)
+  ;; cambiar tamaño de latex preview
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.25))
+  ;; definir aplicaciones para abrir distintos tipos de archivos
+  (setq org-file-apps
+	'((auto-mode . emacs)
+	  ("\\.pdf\\'" . "okular \"%s\"")))
+  ;; resalta los bloques latex en org
+  (setq org-highlight-latex-and-related '(native))
+  ;; necesario para exportar formulas de mate a odt
+  (setq org-latex-to-mathml-convert-command "latexmlmath '%i' --presentationmathml=%o")
+  ;; aplicar el aplastar listas al tamaño indicado en <4> al iniciar
+  (setq org-startup-shrink-all-tables t)
+  ;; evitar que tab y enter tengan significado especial en las tablas
+  (setq org-table-auto-blank-field nil)
+  ;; archivos disponibles para construir agenda
+  (setq org-agenda-files '("gtd.org" "agenda.org"))
+  ;; definir directorio de org y archivos de notas
+  (setq org-directory "~/org")
+  (setq org-default-notes-file (concat org-directory "/notes.org"))
+  ;; archivos disponibles para hacer refiles
+  (setq org-refile-targets (list
+			    (cons (concat org-directory "/org/gtd.org")
+				  (cons :maxlevel 3))
+			    (cons (concat org-directory "/org/someday.org")
+				  (cons :maxlevel 3))
+			    (cons (concat org-directory "/org/habits.org")
+				  (cons :maxlevel 3))))
+  (setq org-refile-use-outline-path 'file)
+  (setq org-outline-path-complete-in-steps nil)
+  ;; templates
+  (setq org-capture-templates
+	'(("g" "GTD inbox" entry (file "org/inbox.org") "* TODO %?")
+	  ;; ("z" "Zettel inbox" entry (file "Zettel/inbox.org") "* TODO %?")
+	  ))
+  (eval-after-load "org"
+    '(require 'ox-md nil t))
+  (setq org-cite-global-bibliography (list (concat zettel-dir "/ref-all-2.bib")))
+  (setq org-cite-insert-processor 'citar)
+  (setq org-cite-follow-processor 'citar)
+  (setq org-cite-activate-processor 'citar))
+
+(use-package citar
+  :ensure t
+  :after org
+  :config
+  (setq citar-bibliography org-cite-global-bibliography)
+  (setq citar-open-prompt t))
+
+(require 'citar-file)
+(add-to-list 'citar-file-open-functions '("pdf" . citar-file-open-external))
+
+;; Requiere instalación en debian de: libenchant-2-dev pkgconf aspell-es
+(use-package jinx
+  :hook ((org-mode typs-ts-mode) . 'jinx-mode)
+  :config
+  (setq jinx-languages "es en")
+  :bind (("M-$" . jinx-correct)
+	 ("C-M-$" . jinx-languages)))
 
 ;;; Utilidades de completado
 
@@ -118,55 +257,38 @@
 ;; Eglot es un cliente de servidores LSP https://github.com/joaotavora/eglot
 ;; los servidores se instalan y configuran aparte (ver notas-config)
 ;; se activa eglot en varios modos:
-(add-hook 'python-mode-hook #'eglot-ensure)
-(add-hook 'R-mode-hook #'eglot-ensure)
+;; (add-hook 'python-ts-mode-hook #'eglot-ensure)
+;; (add-hook 'ess-mode-hook #'eglot-ensure)
 
 ;;;;; oc-csl ;;;;;;
 
 ;; procesador de exportación de citas con soporte para CSL
 ;; depende de citeproc-el https://github.com/andras-simonyi/citeproc-el
-
-(require 'oc-csl)
-;; directorio de los locales
-(setq org-cite-csl-locales-dir "~/.emacs.d/locales")
-;; directorio de estilos csl (se pueden descargar con
-;; la interfáz gráfica de Zotero)
-(setq org-cite-csl-styles-dir "~/Zotero/styles")
+;; (require 'oc-csl)
+;; ;; directorio de los locales
+;; (setq org-cite-csl-locales-dir "~/.emacs.d/locales")
+;; ;; directorio de estilos csl (se pueden descargar con
+;; ;; la interfáz gráfica de Zotero)
+;; (setq org-cite-csl-styles-dir "~/Zotero/styles")
 
 ;;;;; citeproc-biblatex ;;;;;;
-
-(require 'oc-biblatex)
+;; (require 'oc-biblatex)
 ;; usar biblatex además requiere que se tenga instalado texlive-bibtex-extra (sudo apt install texlive-bibtex-extra) y biber (sudo apt install biber)
 
-;;;;; markdown-mode ;;;;;
-
-(setq markdown-enable-math t)
-
 ;;;;; code-cells ;;;;;;
+
+(defalias 'code-cells-eval-forward-cell
+   (kmacro "C-c C-w M-]"))
 
 (with-eval-after-load 'code-cells
   (let ((map code-cells-mode-map))
     (define-key map (kbd "C-c C-w") 'code-cells-eval)
     (define-key map (kbd "M-]") 'code-cells-forward-cell)
-    (define-key map (kbd "M-[") 'code-cells-backward-cell)))
+    (define-key map (kbd "M-[") 'code-cells-backward-cell)
+    (define-key map (kbd "C-c C-q") 'code-cells-eval-forward-cell)))
 (add-hook 'python-mode-hook #'code-cells-mode)
 
-;;;;; denote ;;;;;
-(setq denote-directory (expand-file-name "~/zttlkstn"))
-(setq org-cite-global-bibliography (list (concat denote-directory "/ref-all-2.bib")))
-(setq denote-file-type 'org)
-(setq denote-known-keywords '("matemáticas" "computación" "biología" "física"
-			      "economía" "academia" "ilustración" "productividad"))
-(setq denote-excluded-keywords-regexp "[0-9]")
-(global-set-key (kbd "C-c n n") #'denote-subdirectory)
-(global-set-key (kbd "C-c n r") #'denote-rename-file)
-(global-set-key (kbd "C-c n C-r") #'denote-rename-file-using-front-matter)
-(global-set-key (kbd "C-c n f") #'denote-open-or-create)
-(global-set-key (kbd "C-c n i") #'denote-link-or-create)
-(global-set-key (kbd "C-c n b") #'denote-link-backlinks)
-(setq denote-excluded-directories-regexp ".*img.*\\|.*ltx.*")
-
-(add-hook 'dired-mode-hook #'denote-dired-mode)
+;; (add-hook 'dired-mode-hook #'denote-dired-mode)
 (setq xref-search-program 'ripgrep)
 
 ;; agregar paquete para formatear completing-read
@@ -178,28 +300,11 @@
 ;; (setq denote-completing-format-keywords-width 25)
 ;; (setq denote-completing-format-create-function 'denote-subdirectory)
  
-;;;;; citar ;;;;;
-(setq citar-bibliography org-cite-global-bibliography)
-(setq org-cite-insert-processor 'citar)
-(setq org-cite-follow-processor 'citar)
-(setq org-cite-activate-processor 'citar)
-(setq citar-open-prompt t)
-(require 'citar-file)
-(add-to-list 'citar-file-open-functions '("pdf" . citar-file-open-external))
 
-;;;;; virtualenvwrapper ;;;;;
-
-(require 'virtualenvwrapper)
-(venv-initialize-interactive-shells)
-(venv-initialize-eshell)
-(setq venv-location "~/Envs")
-
-;;;;;; jinx ;;;;;
-;; corrector ortográfico que corrige todo lo que se ve del buffer
-(require 'jinx)
-(setq jinx-languages "es_MX.UTF-8")
-(setq ispell-dictionary "es")
-;; (keymap-global-set "<remap> <ispell-word>" #'jinx-correct)
+;;;;;; conda ;;;;;;
+(require 'conda)
+(conda-env-initialize-interactive-shells)
+(conda-env-initialize-eshell)
 
 ;; ;;;;; latex ;;;;;
 ;; ;; se agrega una nueva clase para exportar en clase "book" pero sin considerar "part"
@@ -213,67 +318,9 @@
 ;; 	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
 ;; 	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; CONFIGURACIÓN DE ORG-MODE ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; se activan lenguajes para babel
-(org-babel-do-load-languages 'org-babel-load-languages
-			     '((python  . t)
-			       (R . t)
-			       (emacs-lisp . t)))
-;; cambio de nombre el comando usado para correr python
-(setq org-babel-python-command "python3")
-;; mostrar las imágenes después de ejecutar un bloque de código
-(add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-;; iniciar con modo de identación virtual
-(setq org-startup-indented t)
-;; iniciar con secciones desplegadas (nótese que `showeverything
-;; interfiere con variable `org-hide-block-startup)
-(setq org-startup-folded 'nofold)
-;; colapsar bloques de código
-(setq org-hide-block-startup nil)
-;; permitir cambiar el tamaño de las imágenes en el preview
-;; usando una clave (e.g., #+ATTR_ORG: :width 300px)
-(setq org-image-actual-width nil)
-;; cambiar tamaño de latex preview
-(setq org-format-latex-options (plist-put org-format-latex-options :scale 1.25))
-;; definir aplicaciones para abrir distintos tipos de archivos
-(setq org-file-apps
-	'((auto-mode . emacs)
-	  ("\\.pdf\\'" . "okular \"%s\"")))
-;; resalta los bloques latex en org
-(setq org-highlight-latex-and-related '(native))
-;; necesario para exportar formulas de mate a odt
-(setq org-latex-to-mathml-convert-command "latexmlmath '%i' --presentationmathml=%o")
-;; aplicar el aplastar listas al tamaño indicado en <4> al iniciar
-(setq org-startup-shrink-all-tables t)
-;; evitar que tab y enter tengan significado especial en las tablas
-(setq org-table-auto-blank-field nil)
-;; archivos disponibles para construir agenda
-(setq org-agenda-files '("gtd.org" "agenda.org"))
-;; definir directorio de org y archivos de notas
-(setq org-directory "~/org")
-(setq org-default-notes-file (concat org-directory "/notes.org"))
-;; archivos disponibles para hacer refiles
-(setq org-refile-targets (list
-			    (cons (concat org-directory "/GTD/gtd.org")
-				  (cons :maxlevel 3))
-			    (cons (concat org-directory "/GTD/someday.org")
-				  (cons :maxlevel 3))
-			    (cons (concat org-directory "/GTD/habits.org")
-				  (cons :maxlevel 3))))
-(setq org-refile-use-outline-path 'file)
-(setq org-outline-path-complete-in-steps nil)
-;; templates
-(setq org-capture-templates
-      '(("g" "GTD inbox" entry (file "GTD/inbox.org") "* TODO %?")
-	;; ("z" "Zettel inbox" entry (file "Zettel/inbox.org") "* TODO %?")
-	))
-
-(eval-after-load "org"
-  '(require 'ox-md nil t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; TEMAS Y APARIENCIA ;;;;;;;;;;
@@ -304,30 +351,30 @@
 
 ;;;;;;; fuentes ;;;;;;
 
-;; definir fuente global por defecto
-(set-face-attribute 'default nil :family "JetBrains Mono" :height 110 :weight 'light)
-;; definir valores de la fuente variable (proporcional)
-(set-face-attribute 'variable-pitch nil :family "Liberation Serif" :height 1.2 :weight 'normal)
-;; definir valores de la fuente fija (mono)
-(set-face-attribute 'fixed-pitch nil :family "JetBrains Mono" :height 110 :weight 'light)
+(let ((mono-spaced-font "JetBrains Mono")
+      (proportionately-spaced-font "Liberation Serif"))
+  (set-face-attribute 'default nil :family mono-spaced-font :height 105)
+  (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
+  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
 
 ;;;;;; org-variable-pitch ;;;;;;
 
-(require 'org-variable-pitch)
-;; definir fuente que usa org-variable-pitch
-(set-face-attribute 'org-variable-pitch-fixed-face nil :family "JetBrains Mono" :height 110 :weight 'light)
-(add-to-list 'org-variable-pitch-fixed-faces 'font-lock-comment-face)
-(setq org-variable-pitch-fontify-headline-prefix nil)
+;; (require 'org-variable-pitch)
+;; ;; definir fuente que usa org-variable-pitch
+;; (set-face-attribute 'org-variable-pitch-fixed-face nil :family "JetBrains Mono" :height 110 :weight 'light)
+;; (add-to-list 'org-variable-pitch-fixed-faces 'font-lock-comment-face)
+;; (setq org-variable-pitch-fontify-headline-prefix nil)
 
 ;; (add-to-list 'load-path (expand-file-name "org-variable-pitch-custom" "~/.emacs.d/b3m3bi-packages/"))
 ;; (require 'org-variable-pitch-custom)
 ;; (add-to-list 'org-variable-pitch-custom-group 'org-document-title)
 ;; (add-to-list 'org-variable-pitch-custom-group 'org-document-info)
 
-;;;;;; linum-mode ;;;;;;
-(add-hook 'python-mode-hook #'display-line-numbers-mode)
-(add-hook 'R-mode-hook #'display-line-numbers-mode)
-(add-hook 'lisp-mode-hook #'display-line-numbers-mode)
+;;;;;; display-line-numbers-mode ;;;;;;
+
+;; (add-hook 'python-ts-mode-hook 'display-line-numbers-mode)
+;; (add-hook 'ess-mode-hook 'display-line-numbers-mode)
+;; (add-hook 'emacs-lisp-mode-hook 'display-line-numbers-mode)
 
 ;;;;;; openwith ;;;;;;
 (require 'openwith)
@@ -542,3 +589,62 @@
 ;; (global-set-key (kbd "C-c p") 'pulsar-pulse-line)
 ;; ;; se activa globalmente el modo
 ;; (pulsar-global-mode 1)
+
+;; ;;;;; virtualenvwrapper ;;;;;
+
+;; (require 'virtualenvwrapper)
+;; (venv-initialize-interactive-shells)
+;; (venv-initialize-eshell)
+;; (setq venv-location "~/Envs")
+
+(setq treesit-language-source-alist
+      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+	(css "https://github.com/tree-sitter/tree-sitter-css")
+	(elisp "https://github.com/Wilfred/tree-sitter-elisp")
+	(html "https://github.com/tree-sitter/tree-sitter-html")
+	(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+	(json "https://github.com/tree-sitter/tree-sitter-json")
+	(markdown "https://github.com/ikatyang/tree-sitter-markdown")
+	(python "https://github.com/tree-sitter/tree-sitter-python")
+	(toml "https://github.com/tree-sitter/tree-sitter-toml")
+	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+	(yaml "https://github.com/ikatyang/tree-sitter-yaml")
+	(r "https://github.com/r-lib/tree-sitter-r")
+	(typst "https://github.com/uben0/tree-sitter-typst")
+	))
+
+(setq major-mode-remap-alist
+      '((python-mode . python-ts-mode)
+	(html-mode . html-ts-mode)
+	(js-mode . js-ts-mode)
+	(css-mode . css-ts-mode)
+	(typst-mode . typst-ts-mode)))
+
+(add-to-list 'load-path "~/.emacs.d/manual_install/typst-ts-mode")
+(require 'typst-ts-mode)
+(setq typst-ts-watch-options "--open")
+(setq typst-ts-mode-grammar-location (expand-file-name "tree-sitter/libtree-sitter-typst.so" user-emacs-directory))
+(setq typst-ts-mode-enable-raw-blocks-highlight t)
+(keymap-set typst-ts-mode-map "C-c C-c" #'typst-ts-tmenu)
+
+;; (setq display-buffer-alist
+;;       `(("^\\ *R Dired"
+;; 	 (display-buffer-reuse-window display-buffer-in-side-window)
+;; 	 (side . right)
+;; 	 (slot . -1)
+;; 	 (window-width . 0.33)
+;; 	 (reusable-frames. nil))
+;; 	("^\\*R"
+;; 	 (display-buffer-reuse-window display-buffer-at-bottom)
+;; 	 (window-width . 0.5)
+;; 	 (window-height . 0.33)
+;; 	 (reusable-frames . nil))
+;; 	("^\\*Help"
+;; 	 (display-buffer-reuse-window display-buffer-in-side-window)
+;; 	 (side . right)
+;; 	 (slot . 1)
+;; 	 (window-width . 0.33)
+;; 	 (reusable-frames . nil))))
+
+(setq ess-indent-with-fancy-comments nil)
+(setq ess-style 'RStudio)
